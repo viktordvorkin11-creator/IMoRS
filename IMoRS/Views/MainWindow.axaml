@@ -1,0 +1,210 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mapsui="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.Avalonia"
+        xmlns:vm="using:IMoRS.ViewModels"
+        xmlns:avalonia="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.UI.Avalonia"
+        x:Class="IMoRS.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/IMoRS.ico"
+        Title="IMoRS"
+        Width="1600"
+        Height="900"
+        WindowDecorations="None">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <Window.Styles>
+        <StyleInclude Source="/Styles/MainStyles.axaml" />
+    </Window.Styles>
+
+    <Grid>
+
+        <Image Source="/Assets/BackGroung.png"
+               Stretch="UniformToFill" />
+
+        <Border Classes="Overlay" />
+
+        <Grid RowDefinitions="Auto *"
+              Margin="15"
+              RowSpacing="15">
+
+            <Border Classes="Tile"
+                    ClipToBounds="True"
+                    PointerPressed="DragWindow">
+
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="Auto *">
+
+                    <StackPanel Grid.Column="0"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Button Padding="-5"
+                                Width="50"
+                                Height="50"
+                                CornerRadius="10"
+                                Background="Transparent"
+                                Margin="5">
+                            <Image Source="/Assets/IMoRS.ico"/>
+                        </Button>
+                        <TextBlock Text="IMoRS"
+                                   VerticalAlignment="Center"
+                                   FontSize="25"
+                                   Foreground="White"
+                                   FontFamily="Cooper" />
+
+                    </StackPanel>
+
+                    <Border Grid.Column="1"
+                            Classes="TopTile">
+
+                        <Grid ColumnDefinitions="Auto Auto Auto">
+
+                            <Button Grid.Column="0"
+                                    Classes="ButtonTop"
+                                    CornerRadius="5, 0,0, 5"
+                                    Command="{Binding Minimize}">
+
+                                <Image Source="/Assets/minus.png"
+                                       Classes="ButtonImage" />
+
+                            </Button>
+
+                            <Button Grid.Column="1"
+                                    Classes="ButtonTop"
+                                    CornerRadius="0"
+                                    Command="{Binding MaxRestore}">
+
+                                <Grid>
+
+                                    <Image Source="/Assets/square.png"
+                                           Classes="ButtonImage"
+                                           IsVisible="{Binding !IsMaximized}" />
+
+                                    <Image Source="/Assets/doublesquare.png"
+                                           Classes="ButtonImage"
+                                           IsVisible="{Binding IsMaximized}" />
+
+                                </Grid>
+
+                            </Button>
+
+                            <Button Grid.Column="2"
+                                    Classes="CloseButton"
+                                    Command="{Binding Close}">
+
+                                <Image Source="/Assets/cross.png"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Width="20"
+                                       Height="20" />
+
+                            </Button>
+
+                        </Grid>
+
+                    </Border>
+
+                </Grid>
+
+            </Border>
+
+
+            <Grid Grid.Row="1">
+
+                <Grid.ColumnDefinitions>
+
+                    <ColumnDefinition Width="2.5*" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="10*" />
+
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="3*" />
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="5*" />
+
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Classes="Tile">
+
+                    </Border>
+
+                    <GridSplitter Grid.Row="1"
+                                  ResizeDirection="Rows" />
+
+                    <Border Grid.Row="2"
+                            Classes="Tile">
+
+                    </Border>
+
+                </Grid>
+
+                <GridSplitter Grid.Column="1"
+                              ResizeDirection="Columns" />
+
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="2*" />
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="1*" />
+
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            CornerRadius="11"
+                            ClipToBounds="True">
+
+                        <Grid>
+
+                            <avalonia:MapControl x:Name="mapControl"
+                                                 ClipToBounds="True"
+                                                 Map="{Binding Map}" />
+
+                            <Border CornerRadius="10"
+                                    Margin="-2"
+                                    BorderBrush="#FF5500AA"
+                                    BorderThickness="6">
+
+                                <Border VerticalAlignment="Top"
+                                        HorizontalAlignment="Right"
+                                        Classes="Tile"
+                                        Margin="8">
+                                    <Button>
+
+                                        <Image Source="/Assets/marker.png"
+                                               Classes="ButtonImage" />
+
+                                    </Button>
+
+                                </Border>
+
+                            </Border>
+
+                        </Grid>
+
+                    </Border>
+
+                    <GridSplitter Grid.Row="1"
+                                  ResizeDirection="Rows" />
+
+                    <Border Grid.Row="2"
+                            Classes="Tile">
+
+                    </Border>
+
+                </Grid>
+
+            </Grid>
+
+        </Grid>
+
+    </Grid>
+
+</Window>
