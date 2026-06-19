@@ -8,6 +8,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using IMoRS.Models;
 using IMoRS.Services;
+using IMoRS.ViewModels;
 using Mapsui;
 using Mapsui.UI.Avalonia;
 
@@ -50,5 +51,12 @@ public partial class MainWindow : Window
         WindowState = WindowState.Minimized;
     }
 
+    private void MapControl_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.ClosePanelCommand.Execute(null);
+        }
+    }
     
 }

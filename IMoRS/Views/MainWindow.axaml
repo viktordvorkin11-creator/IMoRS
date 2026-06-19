@@ -11,25 +11,35 @@
         Height="900"
         WindowDecorations="None">
 
+    <Window.Transitions>
+        <Transitions>
+            <DoubleTransition Property="Width"
+                              Duration="0:0:0.3" />
+        </Transitions>
+    </Window.Transitions>
+
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
+    <!--Подключил стили-->
     <Window.Styles>
         <StyleInclude Source="/Styles/MainStyles.axaml" />
     </Window.Styles>
 
     <Grid>
-
+        <!--Фон-->
         <Image Source="/Assets/BackGroung.png"
                Stretch="UniformToFill" />
 
+        <!--Затемнение-->
         <Border Classes="Overlay" />
 
         <Grid RowDefinitions="Auto *"
               Margin="15"
               RowSpacing="15">
 
+            <!--Верхняя панелька-->
             <Border Classes="Tile"
                     ClipToBounds="True"
                     PointerPressed="DragWindow">
@@ -37,17 +47,15 @@
                 <Grid Grid.Row="0"
                       ColumnDefinitions="Auto *">
 
+                    <!--Иконка приложения и название-->
                     <StackPanel Grid.Column="0"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
-                        <Button Padding="-5"
-                                Width="50"
-                                Height="50"
-                                CornerRadius="10"
-                                Background="Transparent"
-                                Margin="5">
-                            <Image Source="/Assets/IMoRS.ico"/>
-                        </Button>
+
+                        <Image Source="/Assets/IMoRS.ico"
+                               Width="50"
+                               Height="50" />
+
                         <TextBlock Text="IMoRS"
                                    VerticalAlignment="Center"
                                    FontSize="25"
@@ -56,6 +64,7 @@
 
                     </StackPanel>
 
+                    <!--Кнопки управления окном-->
                     <Border Grid.Column="1"
                             Classes="TopTile">
 
@@ -110,96 +119,87 @@
 
             </Border>
 
+            <!--Основная часть-->
+            <Grid Grid.Row="1"
+                  ColumnSpacing="10"
+                  ColumnDefinitions="Auto *">
 
-            <Grid Grid.Row="1">
+                <!--Openable Border-->
+                <Border Grid.Column="0"
+                        Classes="Tile"
+                        Padding="10"
+                        Width="{Binding PanelWidth}"
+                        HorizontalAlignment="Left">
+                    
+                    <Border.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Width"
+                                              Duration="0:0:0.3"/>
+                        </Transitions>
+                    </Border.Transitions>
 
-                <Grid.ColumnDefinitions>
+                    <Grid RowSpacing="10">
 
-                    <ColumnDefinition Width="2.5*" />
-                    <ColumnDefinition Width="5" />
-                    <ColumnDefinition Width="10*" />
+                        <Grid.RowDefinitions>
 
-                </Grid.ColumnDefinitions>
+                            <RowDefinition Height="6*" />
+                            <RowDefinition Height="7*" />
 
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
+                        </Grid.RowDefinitions>
 
-                        <RowDefinition Height="3*" />
-                        <RowDefinition Height="5" />
-                        <RowDefinition Height="5*" />
+                        <!--Image Border-->
+                        <Border Grid.Row="0"
+                                Classes="Tile">
 
-                    </Grid.RowDefinitions>
+                        </Border>
 
-                    <Border Grid.Row="0"
-                            Classes="Tile">
+                        <!--Description Border-->
+                        <Border Grid.Row="1"
+                                Classes="Tile">
 
-                    </Border>
+                        </Border>
 
-                    <GridSplitter Grid.Row="1"
-                                  ResizeDirection="Rows" />
+                    </Grid>
 
-                    <Border Grid.Row="2"
-                            Classes="Tile">
+                </Border>
+                
+                <Border Grid.Column="1"
+                        CornerRadius="11"
+                        ClipToBounds="True">
 
-                    </Border>
+                    <Grid>
 
-                </Grid>
+                        <avalonia:MapControl x:Name="mapControl"
+                                             ClipToBounds="True"
+                                             Map="{Binding Map}"
+                                             PointerPressed="MapControl_OnPointerPressed"/>
+                        
+                        <Border CornerRadius="10"
+                                Margin="-2"
+                                BorderBrush="#FF5500AA"
+                                BorderThickness="6">
 
-                <GridSplitter Grid.Column="1"
-                              ResizeDirection="Columns" />
-
-                <Grid Grid.Column="2">
-                    <Grid.RowDefinitions>
-
-                        <RowDefinition Height="2*" />
-                        <RowDefinition Height="5" />
-                        <RowDefinition Height="1*" />
-
-                    </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0"
-                            CornerRadius="11"
-                            ClipToBounds="True">
-
-                        <Grid>
-
-                            <avalonia:MapControl x:Name="mapControl"
-                                                 ClipToBounds="True"
-                                                 Map="{Binding Map}" />
-
-                            <Border CornerRadius="10"
-                                    Margin="-2"
-                                    BorderBrush="#FF5500AA"
-                                    BorderThickness="6">
-
-                                <Border VerticalAlignment="Top"
-                                        HorizontalAlignment="Right"
-                                        Classes="Tile"
-                                        Margin="8">
-                                    <Button>
+                            <Border VerticalAlignment="Top"
+                                    HorizontalAlignment="Right"
+                                    Classes="Tile"
+                                    Margin="8">
+                                <StackPanel Orientation="Vertical">
+                                    <Button Command="{Binding OpenPanel}">
 
                                         <Image Source="/Assets/marker.png"
                                                Classes="ButtonImage" />
 
                                     </Button>
-
-                                </Border>
-
+                                    
+                                </StackPanel>
+                                
                             </Border>
 
-                        </Grid>
+                        </Border>
 
-                    </Border>
+                    </Grid>
 
-                    <GridSplitter Grid.Row="1"
-                                  ResizeDirection="Rows" />
-
-                    <Border Grid.Row="2"
-                            Classes="Tile">
-
-                    </Border>
-
-                </Grid>
+                </Border>
 
             </Grid>
 

@@ -17,6 +17,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private bool isMaximized = false;
 
+    [ObservableProperty] private double panelWidth = 30;
+
     public MainWindowViewModel()
     {
         CreateMap();
@@ -71,7 +73,17 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             IsMaximized = false;
         }
+    }
 
+    [RelayCommand]
+    public void OpenPanel()
+    {
+        PanelWidth = App.MainWindow!.Bounds.Width * 0.25;
+    }
+
+    [RelayCommand]
+    public void ClosePanel()
+    {
+        PanelWidth = 30;
     }
 }
-
