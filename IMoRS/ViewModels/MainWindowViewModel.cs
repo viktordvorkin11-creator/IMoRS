@@ -4,9 +4,13 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HarfBuzzSharp;
 using IMoRS.Services;
 using Mapsui;
+using Mapsui.Extensions;
+using Mapsui.Layers;
 using Mapsui.Projections;
+using Mapsui.Styles;
 using Mapsui.Tiling;
 
 namespace IMoRS.ViewModels;
@@ -19,15 +23,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private double panelWidth = 30;
 
+    [ObservableProperty] private bool isAddingMarker = false;
+
     public MainWindowViewModel()
     {
         CreateMap();
     }
 
+    private readonly MemoryLayer _markerLayer = new();
+
     private void CreateMap()
     {
         var map = new Map();
         map.Layers.Add(OpenStreetMap.CreateTileLayer());
+
+        _markerLayer.Name = "Markers";
+        map.Layers.Add(_markerLayer);
 
         var state = MapStateService.Load();
 
@@ -44,6 +55,17 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Map = map;
+    }
+
+    public void AddMarker(double lon, double lat)
+    {
+        var feature = new PointFeature(SphericalMercator.FromLonLat(lon, lat).ToMPoint());
+
+        feature.Styles.Add(new SymbolStyle());
+
+        _markerLayer.Features = [feature];
+
+        Map?.Refresh();
     }
 
     [RelayCommand]
