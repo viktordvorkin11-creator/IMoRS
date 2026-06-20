@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -24,6 +25,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private double panelWidth = 30;
 
     [ObservableProperty] private bool isAddingMarker = false;
+    
+    private readonly MarkerDbService _database = new();
+    private readonly List<IFeature> _markers = [];
 
     public MainWindowViewModel()
     {
@@ -38,6 +42,18 @@ public partial class MainWindowViewModel : ViewModelBase
         map.Layers.Add(OpenStreetMap.CreateTileLayer());
 
         _markerLayer.Name = "Markers";
+        
+        foreach (var marker in _database.LoadMarkers())
+        {
+            var feature = new PointFeature(SphericalMercator.FromLonLat(marker.X, marker.Y));
+            
+            feature.Styles.Add(new SymbolStyle());
+            
+            _markers.Add(feature);
+        }
+
+        _markerLayer.Features = _markers;
+
         map.Layers.Add(_markerLayer);
 
         var state = MapStateService.Load();
@@ -57,13 +73,19 @@ public partial class MainWindowViewModel : ViewModelBase
         Map = map;
     }
 
-    public void AddMarker(double lon, double lat)
+    public void AddMarker(double x, double y)
     {
-        var feature = new PointFeature(SphericalMercator.FromLonLat(lon, lat).ToMPoint());
+        var feature = new PointFeature(SphericalMercator.FromLonLat(x, y).ToMPoint());
 
         feature.Styles.Add(new SymbolStyle());
 
-        _markerLayer.Features = [feature];
+        _markers.Add(feature);
+
+        _markerLayer.Features = _markers;
+
+        _database.AddMarker(x, y);
+
+        Map?.Refresh();
 
         Map?.Refresh();
     }
