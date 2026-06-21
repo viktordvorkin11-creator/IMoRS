@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HarfBuzzSharp;
+using IMoRS.Models;
 using IMoRS.Services;
 using Mapsui;
 using Mapsui.Extensions;
@@ -22,15 +25,40 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private bool isMaximized = false;
 
-    [ObservableProperty] private double panelWidth = 30;
+    [ObservableProperty] private double panelWidth1 = 30;
+
+    [ObservableProperty] private double panelWidth2 = 30;
 
     [ObservableProperty] private bool isAddingMarker = false;
-    
+
+    [ObservableProperty] private double arrowAngle;
+
+    [ObservableProperty] private bool isPanelOpen;
+
+    public string ArrowTransform
+    {
+        get
+        {
+            if (IsPanelOpen)
+                return "rotate(180deg)";
+            else
+                return "rotate(0deg)";
+        }
+    }
+
+    partial void OnIsPanelOpenChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ArrowTransform));
+    }
+
+    public ObservableCollection<SignInfo> Signs { get; } = new(SignService.Signs);
+
     private readonly MarkerDbService _database = new();
     private readonly List<IFeature> _markers = [];
 
     public MainWindowViewModel()
     {
+        ArrowAngle = 180;
         CreateMap();
     }
 
@@ -42,13 +70,13 @@ public partial class MainWindowViewModel : ViewModelBase
         map.Layers.Add(OpenStreetMap.CreateTileLayer());
 
         _markerLayer.Name = "Markers";
-        
+
         foreach (var marker in _database.LoadMarkers())
         {
             var feature = new PointFeature(SphericalMercator.FromLonLat(marker.X, marker.Y));
-            
+
             feature.Styles.Add(new SymbolStyle());
-            
+
             _markers.Add(feature);
         }
 
@@ -120,14 +148,39 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void OpenPanel()
+    public void OpenPanel1()
     {
-        PanelWidth = App.MainWindow!.Bounds.Width * 0.25;
+        PanelWidth1 = App.MainWindow!.Bounds.Width * 0.25;
     }
 
     [RelayCommand]
-    public void ClosePanel()
+    public void ClosePanel1()
     {
-        PanelWidth = 30;
+        PanelWidth1 = 30;
+    }
+
+    [RelayCommand]
+    public void ClosePanel2()
+    {
+        PanelWidth2 = 30;
+        ArrowAngle = 180;
+        IsPanelOpen = false;
+    }
+
+    [RelayCommand]
+    public void TogglePanel2()
+    {
+        IsPanelOpen = !IsPanelOpen;
+
+        if (IsPanelOpen)
+        {
+            PanelWidth2 = App.MainWindow!.Bounds.Width * 0.3;
+            ArrowAngle = 0;
+        }
+        else
+        {
+            PanelWidth2 = 30;
+            ArrowAngle = 180;
+        }
     }
 }

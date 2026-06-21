@@ -61,7 +61,8 @@ public partial class MainWindow : Window
     {
         if (DataContext is MainWindowViewModel vm)
         {
-            vm.ClosePanelCommand.Execute(null);
+            vm.ClosePanel1Command.Execute(null);
+            vm.ClosePanel2Command.Execute(null);
         }
     }
 
