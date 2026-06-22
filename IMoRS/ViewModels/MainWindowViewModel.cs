@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -8,6 +11,7 @@ using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HarfBuzzSharp;
+using IMoRS.DTOs;
 using IMoRS.Models;
 using IMoRS.Services;
 using Mapsui;
@@ -16,6 +20,8 @@ using Mapsui.Layers;
 using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.Tiling;
+using IMoRS.Services;
+using Mapsui.UI.Avalonia;
 
 namespace IMoRS.ViewModels;
 
@@ -27,7 +33,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private double panelWidth1 = 30;
 
-    [ObservableProperty] private double panelWidth2 = 30;
+    [ObservableProperty] private double panelWidth2 = 15;
 
     [ObservableProperty] private bool isAddingMarker = false;
 
@@ -35,6 +41,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private bool isPanelOpen;
 
+    [ObservableProperty] private double borderListWidth = 25;
+
+    [ObservableProperty] private double borderListHeight = 0;
+
+    [ObservableProperty] private bool isListOpen;
+
+    [ObservableProperty] private double overlayOpacity;
+
+    [ObservableProperty] private MarkerDto? selectedMarker;
+
+    private readonly MarkerService _markerService = new();
+    
     public string ArrowTransform
     {
         get
@@ -46,14 +64,14 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private readonly Dictionary<string, int> _bitmapIds = new();
+
     partial void OnIsPanelOpenChanged(bool value)
     {
         OnPropertyChanged(nameof(ArrowTransform));
     }
 
-    public ObservableCollection<SignInfo> Signs { get; } = new(SignService.Signs);
-
-    private readonly MarkerDbService _database = new();
+    private readonly MarkerService _database = new();
     private readonly List<IFeature> _markers = [];
 
     public MainWindowViewModel()
@@ -62,7 +80,12 @@ public partial class MainWindowViewModel : ViewModelBase
         CreateMap();
     }
 
-    private readonly MemoryLayer _markerLayer = new();
+    private readonly MemoryLayer _markerLayer = new()
+    {
+        Style = null,
+        Name = "Merkers",
+        Features = new List<IFeature>()
+    };
 
     private void CreateMap()
     {
@@ -71,13 +94,21 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _markerLayer.Name = "Markers";
 
-        foreach (var marker in _database.LoadMarkers())
+        foreach (var marker in _markerService.GetAll())
         {
-            var feature = new PointFeature(SphericalMercator.FromLonLat(marker.X, marker.Y));
+            if (marker.ImagePath != null)
+            {
+                var feature = new PointFeature(
+                    SphericalMercator.FromLonLat(marker.X, marker.Y));
 
-            feature.Styles.Add(new SymbolStyle());
+                feature.Styles.Add(new ImageStyle
+                {
+                    Image = $"file://{marker.ImagePath}",
+                    SymbolScale = 0.5
+                });
 
-            _markers.Add(feature);
+                _markers.Add(feature);
+            }
         }
 
         _markerLayer.Features = _markers;
@@ -98,8 +129,46 @@ public partial class MainWindowViewModel : ViewModelBase
             map.Navigator.ZoomTo(12);
         }
 
+        Map.Navigator.ViewportChanged += OnViewportChanged;
+
         Map = map;
     }
+
+    private void OnViewportChanged(object? sender, EventArgs e)
+    {
+        if (_markerLayer == null) return;
+
+        var resolution = Map.Navigator.Viewport.Resolution;
+
+        double scale;
+        double baseSize = 0.5;
+
+        if (resolution > 5000)
+        {
+            scale = baseSize;
+        }
+        else if (resolution > 1000)
+        {
+            double t = (5000 - resolution) / 4000;
+            scale = baseSize * (1 - t * 0.7);
+        }
+        else
+        {
+            scale = baseSize * 0.3;
+        }
+
+        foreach (var feature in _markerLayer.Features)
+        {
+            var style = feature.Styles.OfType<ImageStyle>().FirstOrDefault();
+            if (style != null)
+            {
+                style.SymbolScale = scale;
+            }
+        }
+
+        OnPropertyChanged(nameof(Map));
+    }
+
 
     public void AddMarker(double x, double y)
     {
@@ -111,7 +180,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _markerLayer.Features = _markers;
 
-        _database.AddMarker(x, y);
+        _markerService.Add(x, y);
 
         Map?.Refresh();
 
@@ -162,25 +231,44 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     public void ClosePanel2()
     {
-        PanelWidth2 = 30;
+        PanelWidth2 = 15;
         ArrowAngle = 180;
         IsPanelOpen = false;
     }
 
     [RelayCommand]
-    public void TogglePanel2()
+    public void OpenPanel2()
     {
-        IsPanelOpen = !IsPanelOpen;
+        IsPanelOpen = true;
 
-        if (IsPanelOpen)
-        {
-            PanelWidth2 = App.MainWindow!.Bounds.Width * 0.3;
-            ArrowAngle = 0;
-        }
-        else
-        {
-            PanelWidth2 = 30;
-            ArrowAngle = 180;
-        }
+        PanelWidth2 = App.MainWindow!.Bounds.Width * 0.1;
+        ArrowAngle = 0;
+    }
+
+    [RelayCommand]
+    public async Task OpenList()
+    {
+        IsListOpen = true;
+        ClosePanel1();
+        ClosePanel2();
+        OverlayOpacity = 0.67;
+        BorderListHeight = App.MainWindow!.Bounds.Height * 0.7;
+        await Task.Delay(200);
+        BorderListWidth = App.MainWindow!.Bounds.Width * 0.7;
+    }
+
+    [RelayCommand]
+    public async Task CloseList()
+    {
+        IsListOpen = false;
+        OverlayOpacity = 0;
+        BorderListWidth = 25;
+        await Task.Delay(200);
+        BorderListHeight = 25;
+        await Task.Delay(200);
+        BorderListHeight = 0;
+        BorderListWidth = App.MainWindow!.Bounds.Width * 0.7;
+        await Task.Delay(200);
+        BorderListWidth = 25;
     }
 }

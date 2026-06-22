@@ -9,7 +9,9 @@
         Title="IMoRS"
         Width="1600"
         Height="900"
-        WindowDecorations="None">
+        WindowDecorations="None"
+        CanResize="True"
+        ExtendClientAreaToDecorationsHint="True">
 
     <Window.Transitions>
         <Transitions>
@@ -177,52 +179,44 @@
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom"
                                     Orientation="Horizontal">
-                            
+
                             <Button VerticalAlignment="Center"
                                     CornerRadius="20"
                                     Padding="0"
                                     Margin="0,10"
-                                    Command="{Binding TogglePanel2}">
-                                
+                                    Command="{Binding OpenPanel2}"
+                                    Classes="SideButton">
+
                                 <Border Classes="Tile"
                                         Background="#F809030E"
                                         CornerRadius="20">
-                                    
+
                                     <Grid Width="30"
                                           Height="30"
                                           RenderTransformOrigin="0.5,0.5">
-                                        
+
                                         <Grid.RenderTransform>
                                             <RotateTransform Angle="{Binding ArrowAngle}"
                                                              CenterX="15"
-                                                             CenterY="15"/>
+                                                             CenterY="15" />
                                         </Grid.RenderTransform>
-
-                                        <!-- <Grid.Transitions> -->
-                                        <!--     <Transitions> -->
-                                        <!--         <TransformOperationsTransition -->
-                                        <!--             Property="RenderTransform" -->
-                                        <!--             Duration="0:0:0.3"/> -->
-                                        <!--     </Transitions> -->
-                                        <!-- </Grid.Transitions> -->
 
                                         <Image Source="/Assets/openIcon.png"
                                                Width="15"
                                                Height="15"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"/>
-                                        
+
                                     </Grid>
-                                    
+
                                 </Border>
-                                
+
                             </Button>
 
                             <Border Classes="Tile"
                                     Background="#F809030E"
-                                    Padding="10"
                                     Width="{Binding PanelWidth2}"
-                                    Margin="10">
+                                    Margin="8">
 
                                 <Border.Transitions>
                                     <Transitions>
@@ -231,9 +225,152 @@
                                     </Transitions>
                                 </Border.Transitions>
 
+                                <StackPanel Orientation="Vertical">
+                                    
+                                    <Border HorizontalAlignment="Stretch"
+                                            Margin="5">
+                                    
+                                        <TextBlock Text="Действия"
+                                                   FontSize="18"
+                                                   Foreground="White"
+                                                   FontWeight="Bold"
+                                                   IsVisible="{Binding IsPanelOpen}"
+                                                   HorizontalAlignment="Center"/>
+                                    
+                                    </Border>
+                                    
+                                    <Button Classes="ControlButton SideButton"
+                                            Command="{Binding OpenList}">
+
+                                        <Border Classes="Tile">
+                                            
+                                            <StackPanel Classes="StackButtonControl">
+                                            
+                                            <Image Source="/Assets/plus.png"
+                                                   Height="20"
+                                                   Width="20"/>
+                                            
+                                            <TextBlock Text="Добавить"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       FontSize="18"/>
+
+                                            </StackPanel>
+                                            
+                                        </Border>
+
+                                    </Button>
+                                    
+                                    <Button Classes="ControlButton SideButton">
+
+                                        <Border Classes="Tile">
+                                            
+                                            <StackPanel Classes="StackButtonControl">
+                                            
+                                            <Image Source="/Assets/minus.png"
+                                                   Height="20"
+                                                   Width="20"/>
+                                            
+                                            <TextBlock Text="Удалить"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       FontSize="18"/>
+
+                                            </StackPanel>
+                                            
+                                        </Border>
+
+                                    </Button>
+
+                                    <Button Classes="ControlButton SideButton">
+
+                                        <Border Classes="Tile">
+                                            
+                                            <StackPanel Classes="StackButtonControl">
+                                            
+                                            <Image Source="/Assets/editIcon.png"
+                                                   Height="20"
+                                                   Width="20"/>
+                                            
+                                            <TextBlock Text="Изменить"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       FontSize="18"/>
+
+                                            </StackPanel>
+                                            
+                                        </Border>
+
+                                    </Button>
+
+                                    <Button Classes="ControlButton SideButton">
+
+                                        <Border Classes="Tile">
+                                            
+                                            <StackPanel Classes="StackButtonControl">
+                                            
+                                            <Image Source="/Assets/cross.png"
+                                                   Height="20"
+                                                   Width="20"/>
+                                            
+                                            <TextBlock Text="Отмена"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       FontSize="18"/>
+
+                                            </StackPanel>
+                                            
+                                        </Border>
+
+                                    </Button>
+
+                                </StackPanel>
+
                             </Border>
 
                         </StackPanel>
+                        
+                        <Border Background="#0e071f"
+                                IsHitTestVisible="{Binding IsListOpen}"
+                                Opacity="{Binding OverlayOpacity}"
+                                PointerPressed="Overlay_PointerPressed">
+
+                            <Border.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity"
+                                                      Duration="0:0:0.5"/>
+                                </Transitions>
+                            </Border.Transitions>
+                            
+                        </Border>
+
+                        
+                        <Border Classes="Tile"
+                                Background="#F809030E"
+                                ClipToBounds="True"
+                                Width="{Binding BorderListWidth}"
+                                Height="{Binding BorderListHeight}"
+                                IsEnabled="{Binding IsListOpen}">
+                            
+                            <Border.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Height"
+                                                      Duration="0:0:0.2"/>
+                                    <DoubleTransition Property="Width"
+                                                      Duration="0:0:0.2"/>
+                                </Transitions>
+                            </Border.Transitions>
+                            
+                            <Grid>
+                                
+                                <Image Source="/Assets/BackGroung.png"
+                                       Stretch="Fill"/>
+                                
+                                <Border Classes="Overlay"/>
+                                
+                            </Grid>
+                            
+                        </Border>
 
                         <Border CornerRadius="10"
                                 Margin="-2"

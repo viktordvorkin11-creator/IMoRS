@@ -8,174 +8,205 @@
             <Grid Width="1600"
                   Height="900">
                 <Image Source="/Assets/BackGroung.png"
-                       Stretch="UniformToFill"/>
+                       Stretch="UniformToFill" />
                 <Border Classes="Overlay" />
 
                 <Grid RowDefinitions="Auto *"
-              Margin="15"
-              RowSpacing="15">
-            
-            <Border Classes="Tile"
-                    ClipToBounds="True">
-                
-                <Grid Grid.Row="0"
-                      ColumnDefinitions="Auto *">
+                      Margin="15"
+                      RowSpacing="15">
 
-                    <StackPanel Grid.Column="0"
-                                Orientation="Horizontal"
-                                VerticalAlignment="Center">
-
-                        <Image Source="/Assets/IMoRS.ico"
-                               Width="50" />
-
-                        <TextBlock Text="IMoRS"
-                                   VerticalAlignment="Center"
-                                   FontSize="25"
-                                   Foreground="White"
-                                   FontFamily="Cooper" />
-
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1"
-                                HorizontalAlignment="Right"
-                                Orientation="Horizontal"
-                                VerticalAlignment="Center">
-
-                        <Border Classes="ButtonBorder">
-                            <Image Source="/Assets/cross.png"
-                                   Classes="ButtonImage"/>
-                        </Border>
-
-                    </StackPanel>
-
-                </Grid>
-                
-            </Border>
-
-
-            <Grid Grid.Row="1">
-
-                <Grid.ColumnDefinitions>
-
-                    <ColumnDefinition Width="2.5*" />
-                    <ColumnDefinition Width="5" />
-                    <ColumnDefinition Width="10*" />
-
-                </Grid.ColumnDefinitions>
-
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
-
-                        <RowDefinition Height="3*" />
-                        <RowDefinition Height="5" />
-                        <RowDefinition Height="5*" />
-
-                    </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0"
-                            Classes="Tile">
-
-                    </Border>
-
-                    <GridSplitter Grid.Row="1"
-                                  ResizeDirection="Rows" />
-
-                    <Border Grid.Row="2"
-                            Classes="Tile">
-
-                    </Border>
-
-                </Grid>
-
-                <GridSplitter Grid.Column="1"
-                              ResizeDirection="Columns" />
-
-                <Grid Grid.Column="2">
-                    <Grid.RowDefinitions>
-
-                        <RowDefinition Height="2*" />
-                        <RowDefinition Height="5" />
-                        <RowDefinition Height="1*" />
-
-                    </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0"
-                            CornerRadius="11"
+                    <Border Classes="Tile"
                             ClipToBounds="True">
-                        <Grid>
-                            <Border CornerRadius="10"
-                                    Margin="-2"
-                                    BorderBrush="#FF5500AA"
-                                    BorderThickness="6" />
+
+                        <Grid Grid.Row="0"
+                              ColumnDefinitions="Auto *">
+
+                            <StackPanel Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+
+                                <Image Source="/Assets/IMoRS.ico"
+                                       Width="50" />
+
+                                <TextBlock Text="IMoRS"
+                                           VerticalAlignment="Center"
+                                           FontSize="25"
+                                           Foreground="White"
+                                           FontFamily="Cooper" />
+
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1"
+                                        HorizontalAlignment="Right"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+
+                                <Border Classes="ButtonBorder">
+                                    <Image Source="/Assets/cross.png"
+                                           Classes="ButtonImage" />
+                                </Border>
+
+                            </StackPanel>
+
                         </Grid>
-                    </Border>
-
-                    <GridSplitter Grid.Row="1"
-                                  ResizeDirection="Rows" />
-
-                    <Border Grid.Row="2"
-                            Classes="Tile">
 
                     </Border>
+
+
+                    <Grid Grid.Row="1">
+
+                        <Grid.ColumnDefinitions>
+
+                            <ColumnDefinition Width="2.5*" />
+                            <ColumnDefinition Width="5" />
+                            <ColumnDefinition Width="10*" />
+
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Grid.Column="0">
+                            <Grid.RowDefinitions>
+
+                                <RowDefinition Height="3*" />
+                                <RowDefinition Height="5" />
+                                <RowDefinition Height="5*" />
+
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0"
+                                    Classes="Tile">
+
+                            </Border>
+
+                            <GridSplitter Grid.Row="1"
+                                          ResizeDirection="Rows" />
+
+                            <Border Grid.Row="2"
+                                    Classes="Tile">
+
+                            </Border>
+
+                        </Grid>
+
+                        <GridSplitter Grid.Column="1"
+                                      ResizeDirection="Columns" />
+
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+
+                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="5" />
+                                <RowDefinition Height="1*" />
+
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0"
+                                    CornerRadius="11"
+                                    ClipToBounds="True">
+                                <Grid>
+                                    <Border CornerRadius="10"
+                                            Margin="-2"
+                                            BorderBrush="#FF5500AA"
+                                            BorderThickness="6" />
+                                </Grid>
+                            </Border>
+
+                            <GridSplitter Grid.Row="1"
+                                          ResizeDirection="Rows" />
+
+                            <Border Grid.Row="2"
+                                    Classes="Tile">
+
+                            </Border>
+
+                        </Grid>
+
+                    </Grid>
 
                 </Grid>
-
-            </Grid>
-
-        </Grid>
             </Grid>
         </Border>
     </Design.PreviewWith>
 
     <Style Selector="Border.Tile">
-        <Setter Property="CornerRadius" Value="10"/>
-        <Setter Property="Background" Value="#A0000000"/>
-        <Setter Property="BorderThickness" Value="3"/>
-        <Setter Property="BorderBrush" Value="#FF5500AA"/>
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Background" Value="#A0000000" />
+        <Setter Property="BorderThickness" Value="3" />
+        <Setter Property="BorderBrush" Value="#FF5500AA" />
     </Style>
     <Style Selector="Border.TopTile">
-        <Setter Property="CornerRadius" Value="5"/>
-        <Setter Property="Background" Value="#A0000000"/>
-        <Setter Property="BorderThickness" Value="3"/>
-        <Setter Property="BorderBrush" Value="#FF5500AA"/>
-        <Setter Property="HorizontalAlignment" Value="Right"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="ClipToBounds" Value="True"/>
-        <Setter Property="Margin" Value="0, 0, 8, 1"/>
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Background" Value="#A0000000" />
+        <Setter Property="BorderThickness" Value="3" />
+        <Setter Property="BorderBrush" Value="#FF5500AA" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="Margin" Value="0, 0, 8, 1" />
     </Style>
     <Style Selector="Border.Overlay">
-        <Setter Property="Background" Value="#A0000000"/>
+        <Setter Property="Background" Value="#A0000000" />
     </Style>
     <Style Selector="Button.ButtonTop">
-        <Setter Property="Width" Value="42"/>
-        <Setter Property="Height" Value="37"/>
-        <Setter Property="Background" Value="#262626"/>
-        <Setter Property="Margin" Value="0, 0, -2, 0"/>    
+        <Setter Property="Width" Value="42" />
+        <Setter Property="Height" Value="37" />
+        <Setter Property="Background" Value="#262626" />
+        <Setter Property="Margin" Value="0, 0, -2, 0" />
         <Style Selector="^:pointerover /template/ContentPresenter">
-            <Setter Property="Background" Value="#FF5500AA"/>
+            <Setter Property="Background" Value="#FF5500AA" />
         </Style>
         <Style Selector="^:pressed /template/ContentPresenter">
-            <Setter Property="Background" Value="#5c1e9c"/>
+            <Setter Property="Background" Value="#5c1e9c" />
         </Style>
     </Style>
     <Style Selector="Button.CloseButton">
-        <Setter Property="Background" Value="#262626"/>
-        <Setter Property="Margin" Value="0, 0, -1, 0"/>
-        <Setter Property="Width" Value="52"/>
-        <Setter Property="Height" Value="37"/>
-        <Setter Property="CornerRadius" Value="0, 5, 5, 0"/>
+        <Setter Property="Background" Value="#262626" />
+        <Setter Property="Margin" Value="0, 0, -1, 0" />
+        <Setter Property="Width" Value="52" />
+        <Setter Property="Height" Value="37" />
+        <Setter Property="CornerRadius" Value="0, 5, 5, 0" />
 
         <Style Selector="^:pointerover /template/ContentPresenter">
-            <Setter Property="Background" Value="Red"/>
+            <Setter Property="Background" Value="Red" />
         </Style>
         <Style Selector="^:pressed /template/ContentPresenter">
-            <Setter Property="Background" Value="#5c1e9c"/>
+            <Setter Property="Background" Value="#5c1e9c" />
         </Style>
     </Style>
     <Style Selector="Image.ButtonImage">
-        <Setter Property="Width" Value="15"/>
-        <Setter Property="Height" Value="15"/>
-        <Setter Property="HorizontalAlignment" Value="Center"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Width" Value="15" />
+        <Setter Property="Height" Value="15" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.ControlButton">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="5" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+    <Style Selector="StackPanel.StackButtonControl">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Margin" Value="10"/>
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="Spacing" Value="10"/>
+    </Style>
+    <Style Selector="Button.SideButton">
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransform">
+            <ScaleTransform ScaleX="1" ScaleY="1"/>
+        </Setter>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition
+                    Property="RenderTransform"
+                    Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+        <Style Selector="^:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.05)"/>
+        </Style>
+        <Style Selector="^:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.95)"/>
+        </Style>
     </Style>
 </Styles>

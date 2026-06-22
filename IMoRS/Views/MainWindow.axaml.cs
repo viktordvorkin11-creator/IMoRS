@@ -6,12 +6,15 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using IMoRS.DTOs;
 using IMoRS.Models;
 using IMoRS.Services;
 using IMoRS.ViewModels;
 using Mapsui;
 using Mapsui.Extensions;
+using Mapsui.Layers;
 using Mapsui.Projections;
+using Mapsui.Styles;
 using Mapsui.UI.Avalonia;
 
 namespace IMoRS.Views;
@@ -23,6 +26,8 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         mapControl.Info += MapControlInfo;
+
+        
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
@@ -72,7 +77,7 @@ public partial class MainWindow : Window
         {
             return;
         }
-        
+
         var worldPosition = e.WorldPosition;
 
         var (lon, lat) = SphericalMercator.ToLonLat(
@@ -81,4 +86,13 @@ public partial class MainWindow : Window
 
         vm.AddMarker(lon, lat);
     }
+
+    private void Overlay_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.CloseListCommand.Execute(null);
+        }
+    }
+    
 }
