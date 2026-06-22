@@ -10,7 +10,7 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
         <AvaloniaResource Include="Assets\DarkThemeMap.json"/>
-        <AvaloniaResourse Include="Styles\**"/>
+        <AvaloniaResource Include="Styles\**"/>
     </ItemGroup>
 
     <ItemGroup>

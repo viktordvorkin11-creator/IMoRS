@@ -13,6 +13,7 @@ using IMoRS.ViewModels;
 using Mapsui;
 using Mapsui.Extensions;
 using Mapsui.Layers;
+using Mapsui.Manipulations;
 using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.UI.Avalonia;
@@ -27,7 +28,7 @@ public partial class MainWindow : Window
 
         mapControl.Info += MapControlInfo;
 
-        
+        var test = ImageService.GetImagePath("sign_6.png"); 
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
@@ -74,17 +75,19 @@ public partial class MainWindow : Window
     private void MapControlInfo(object? sender, MapInfoEventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm)
-        {
             return;
+
+        var mapInfo = e.GetMapInfo(e.Map.Layers);
+
+        if (mapInfo?.Feature is PointFeature feature)
+        {
+            if (feature["Marker"] is MarkerDto marker)
+            {
+                vm.SelectedMarker = marker;
+
+                vm.OpenPanel1Command.Execute(null);
+            }
         }
-
-        var worldPosition = e.WorldPosition;
-
-        var (lon, lat) = SphericalMercator.ToLonLat(
-            worldPosition.X,
-            worldPosition.Y);
-
-        vm.AddMarker(lon, lat);
     }
 
     private void Overlay_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -94,5 +97,6 @@ public partial class MainWindow : Window
             vm.CloseListCommand.Execute(null);
         }
     }
+    
     
 }

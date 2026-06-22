@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HarfBuzzSharp;
@@ -51,8 +52,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private MarkerDto? selectedMarker;
 
+    [ObservableProperty] private Bitmap userImage;
+
     private readonly MarkerService _markerService = new();
-    
+
     public string ArrowTransform
     {
         get
@@ -96,19 +99,27 @@ public partial class MainWindowViewModel : ViewModelBase
 
         foreach (var marker in _markerService.GetAll())
         {
-            if (marker.ImagePath != null)
+            if (string.IsNullOrEmpty(marker.IconPath))
+                continue;
+            
+            if (!File.Exists(marker.IconPath))
             {
-                var feature = new PointFeature(
-                    SphericalMercator.FromLonLat(marker.X, marker.Y));
-
-                feature.Styles.Add(new ImageStyle
-                {
-                    Image = $"file://{marker.ImagePath}",
-                    SymbolScale = 0.5
-                });
-
-                _markers.Add(feature);
+                Console.WriteLine(marker.IconPath);
+                continue; 
             }
+
+            var feature = new PointFeature(
+                SphericalMercator.FromLonLat(marker.X, marker.Y));
+
+            feature["Marker"] = marker;
+
+            feature.Styles.Add(new ImageStyle
+            {
+                Image = $"file://{marker.IconPath}",
+                SymbolScale = 0.5
+            });
+
+            _markers.Add(feature);
         }
 
         _markerLayer.Features = _markers;
@@ -128,10 +139,9 @@ public partial class MainWindowViewModel : ViewModelBase
             map.Navigator.CenterOn(centerX, centerY);
             map.Navigator.ZoomTo(12);
         }
-
-        Map.Navigator.ViewportChanged += OnViewportChanged;
-
+        
         Map = map;
+        Map.Navigator.ViewportChanged += OnViewportChanged;
     }
 
     private void OnViewportChanged(object? sender, EventArgs e)
@@ -172,7 +182,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void AddMarker(double x, double y)
     {
-        var feature = new PointFeature(SphericalMercator.FromLonLat(x, y).ToMPoint());
+        var feature = new PointFeature(
+            SphericalMercator.FromLonLat(x, y));
 
         feature.Styles.Add(new SymbolStyle());
 
@@ -183,9 +194,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _markerService.Add(x, y);
 
         Map?.Refresh();
-
-        Map?.Refresh();
     }
+    
 
     [RelayCommand]
     public void Close()
@@ -220,6 +230,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public void OpenPanel1()
     {
         PanelWidth1 = App.MainWindow!.Bounds.Width * 0.25;
+        if (selectedMarker == null)
+            return;
+        
+        UserImage = new Bitmap(selectedMarker.ImagePath);
     }
 
     [RelayCommand]
@@ -270,5 +284,36 @@ public partial class MainWindowViewModel : ViewModelBase
         BorderListWidth = App.MainWindow!.Bounds.Width * 0.7;
         await Task.Delay(200);
         BorderListWidth = 25;
+    }
+    
+    [RelayCommand]
+    public async Task AddImage()
+    {
+        if (App.MainWindow != null)
+        {
+            var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions
+                {
+                    Title = "Выберите изображение",
+                    AllowMultiple = false,
+                    FileTypeFilter =
+                    [
+                        new FilePickerFileType("Изображения")
+                        {
+                            Patterns = ["*.jpg", "*.jpeg", "*.png"]
+                        }
+                    ]
+                });
+            if (files.Count == 0)
+                return;
+            
+
+            var photoPath = files[0].Path.LocalPath;
+
+            selectedMarker.ImagePath = photoPath;
+            _markerService.UpdateApp(selectedMarker);
+
+            UserImage = new Bitmap(photoPath);
+        }
     }
 }

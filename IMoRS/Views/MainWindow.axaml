@@ -9,9 +9,10 @@
         Title="IMoRS"
         Width="1600"
         Height="900"
-        WindowDecorations="None"
-        CanResize="True"
-        ExtendClientAreaToDecorationsHint="True">
+        CanResize="False"
+        WindowDecorations="BorderOnly"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="50">
 
     <Window.Transitions>
         <Transitions>
@@ -152,7 +153,32 @@
                         <!--Image Border-->
                         <Border Grid.Row="0"
                                 Classes="Tile">
+                            
+                            <Grid HorizontalAlignment="Center"
+                                  VerticalAlignment="Center">
+                                
+                                <Image Source="{Binding UserImage}"
+                                       Margin="10"></Image>
 
+                                <Button HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Margin="70"
+                                        Padding="0"
+                                        CornerRadius="10"
+                                        Classes="SideButton OpenFolderButton"
+                                        Command="{Binding AddImage}">
+                                    
+                                    <Border Classes="Tile">
+                                        
+                                        <Image Source="/Assets/OpenFolderIcon.png"
+                                               Margin="25" />
+                                        
+                                    </Border>
+                                    
+                                </Button>
+                                
+                            </Grid>
+                            
                         </Border>
 
                         <!--Description Border-->
@@ -205,7 +231,7 @@
                                                Width="15"
                                                Height="15"
                                                HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
+                                               VerticalAlignment="Center" />
 
                                     </Grid>
 
@@ -226,58 +252,37 @@
                                 </Border.Transitions>
 
                                 <StackPanel Orientation="Vertical">
-                                    
+
                                     <Border HorizontalAlignment="Stretch"
                                             Margin="5">
-                                    
+
                                         <TextBlock Text="Действия"
                                                    FontSize="18"
                                                    Foreground="White"
                                                    FontWeight="Bold"
                                                    IsVisible="{Binding IsPanelOpen}"
-                                                   HorizontalAlignment="Center"/>
-                                    
+                                                   HorizontalAlignment="Center" />
+
                                     </Border>
-                                    
+
                                     <Button Classes="ControlButton SideButton"
                                             Command="{Binding OpenList}">
 
                                         <Border Classes="Tile">
-                                            
+
                                             <StackPanel Classes="StackButtonControl">
-                                            
-                                            <Image Source="/Assets/plus.png"
-                                                   Height="20"
-                                                   Width="20"/>
-                                            
-                                            <TextBlock Text="Добавить"
-                                                       Foreground="White"
-                                                       FontWeight="Bold"
-                                                       FontSize="18"/>
+
+                                                <Image Source="/Assets/plus.png"
+                                                       Height="20"
+                                                       Width="20" />
+
+                                                <TextBlock Text="Добавить"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="18" />
 
                                             </StackPanel>
-                                            
-                                        </Border>
 
-                                    </Button>
-                                    
-                                    <Button Classes="ControlButton SideButton">
-
-                                        <Border Classes="Tile">
-                                            
-                                            <StackPanel Classes="StackButtonControl">
-                                            
-                                            <Image Source="/Assets/minus.png"
-                                                   Height="20"
-                                                   Width="20"/>
-                                            
-                                            <TextBlock Text="Удалить"
-                                                       Foreground="White"
-                                                       FontWeight="Bold"
-                                                       FontSize="18"/>
-
-                                            </StackPanel>
-                                            
                                         </Border>
 
                                     </Button>
@@ -285,20 +290,20 @@
                                     <Button Classes="ControlButton SideButton">
 
                                         <Border Classes="Tile">
-                                            
+
                                             <StackPanel Classes="StackButtonControl">
-                                            
-                                            <Image Source="/Assets/editIcon.png"
-                                                   Height="20"
-                                                   Width="20"/>
-                                            
-                                            <TextBlock Text="Изменить"
-                                                       Foreground="White"
-                                                       FontWeight="Bold"
-                                                       FontSize="18"/>
+
+                                                <Image Source="/Assets/minus.png"
+                                                       Height="20"
+                                                       Width="20" />
+
+                                                <TextBlock Text="Удалить"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="18" />
 
                                             </StackPanel>
-                                            
+
                                         </Border>
 
                                     </Button>
@@ -306,20 +311,41 @@
                                     <Button Classes="ControlButton SideButton">
 
                                         <Border Classes="Tile">
-                                            
+
                                             <StackPanel Classes="StackButtonControl">
-                                            
-                                            <Image Source="/Assets/cross.png"
-                                                   Height="20"
-                                                   Width="20"/>
-                                            
-                                            <TextBlock Text="Отмена"
-                                                       Foreground="White"
-                                                       FontWeight="Bold"
-                                                       FontSize="18"/>
+
+                                                <Image Source="/Assets/editIcon.png"
+                                                       Height="20"
+                                                       Width="20" />
+
+                                                <TextBlock Text="Изменить"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="18" />
 
                                             </StackPanel>
-                                            
+
+                                        </Border>
+
+                                    </Button>
+
+                                    <Button Classes="ControlButton SideButton">
+
+                                        <Border Classes="Tile">
+
+                                            <StackPanel Classes="StackButtonControl">
+
+                                                <Image Source="/Assets/cross.png"
+                                                       Height="20"
+                                                       Width="20" />
+
+                                                <TextBlock Text="Отмена"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="18" />
+
+                                            </StackPanel>
+
                                         </Border>
 
                                     </Button>
@@ -329,7 +355,7 @@
                             </Border>
 
                         </StackPanel>
-                        
+
                         <Border Background="#0e071f"
                                 IsHitTestVisible="{Binding IsListOpen}"
                                 Opacity="{Binding OverlayOpacity}"
@@ -338,38 +364,62 @@
                             <Border.Transitions>
                                 <Transitions>
                                     <DoubleTransition Property="Opacity"
-                                                      Duration="0:0:0.5"/>
+                                                      Duration="0:0:0.5" />
                                 </Transitions>
                             </Border.Transitions>
-                            
+
                         </Border>
 
-                        
+
                         <Border Classes="Tile"
                                 Background="#F809030E"
                                 ClipToBounds="True"
                                 Width="{Binding BorderListWidth}"
                                 Height="{Binding BorderListHeight}"
                                 IsEnabled="{Binding IsListOpen}">
-                            
+
                             <Border.Transitions>
                                 <Transitions>
                                     <DoubleTransition Property="Height"
-                                                      Duration="0:0:0.2"/>
+                                                      Duration="0:0:0.2" />
                                     <DoubleTransition Property="Width"
-                                                      Duration="0:0:0.2"/>
+                                                      Duration="0:0:0.2" />
                                 </Transitions>
                             </Border.Transitions>
-                            
+
                             <Grid>
-                                
+
                                 <Image Source="/Assets/BackGroung.png"
-                                       Stretch="Fill"/>
-                                
-                                <Border Classes="Overlay"/>
-                                
+                                       Stretch="Fill" />
+
+                                <Border Classes="Overlay" />
+
+                                <ScrollViewer>
+
+                                    <!-- <ItemsControl ItemsSource="{Binding Signs}"> -->
+                                    <!-- -->
+                                    <!-- <ItemsControl.ItemsPanel> -->
+                                    <!--     <ItemsPanelTemplate> -->
+                                    <!--         <WrapPanel /> -->
+                                    <!--     </ItemsPanelTemplate> -->
+                                    <!-- </ItemsControl.ItemsPanel> -->
+                                    <!-- -->
+                                    <!-- <ItemsControl.ItemTemplate> -->
+                                    <!--     <DataTemplate> -->
+                                    <!--         <Button Width="80" -->
+                                    <!--                 Height="80" -->
+                                    <!--                 Margin="5"> -->
+                                    <!--             <Image Source="{Binding ImagePath}" /> -->
+                                    <!--         </Button> -->
+                                    <!--     </DataTemplate> -->
+                                    <!-- </ItemsControl.ItemTemplate> -->
+                                    <!-- -->
+                                    <!-- </ItemsControl> -->
+                                    <!-- -->
+                                </ScrollViewer>
+
                             </Grid>
-                            
+
                         </Border>
 
                         <Border CornerRadius="10"
