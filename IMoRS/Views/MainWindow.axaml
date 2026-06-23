@@ -40,8 +40,16 @@
 
         <Grid RowDefinitions="Auto *"
               Margin="15"
-              RowSpacing="15">
+              RowSpacing="15"
+              Opacity="{Binding AppOpacity}">
 
+            <Grid.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity"
+                                      Duration="0:0:1"/>
+                </Transitions>
+            </Grid.Transitions>
+            
             <!--Верхняя панелька-->
             <Border Classes="Tile"
                     ClipToBounds="True"
@@ -153,12 +161,13 @@
                         <!--Image Border-->
                         <Border Grid.Row="0"
                                 Classes="Tile">
-                            
+
                             <Grid HorizontalAlignment="Center"
                                   VerticalAlignment="Center">
-                                
+
                                 <Image Source="{Binding UserImage}"
-                                       Margin="10"></Image>
+                                       Margin="10">
+                                </Image>
 
                                 <Button HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
@@ -167,18 +176,18 @@
                                         CornerRadius="10"
                                         Classes="SideButton OpenFolderButton"
                                         Command="{Binding AddImage}">
-                                    
+
                                     <Border Classes="Tile">
-                                        
+
                                         <Image Source="/Assets/OpenFolderIcon.png"
                                                Margin="25" />
-                                        
+
                                     </Border>
-                                    
+
                                 </Button>
-                                
+
                             </Grid>
-                            
+
                         </Border>
 
                         <!--Description Border-->
@@ -200,8 +209,17 @@
                         <avalonia:MapControl x:Name="mapControl"
                                              ClipToBounds="True"
                                              Map="{Binding Map}"
-                                             PointerPressed="MapControl_OnPointerPressed" />
-
+                                             PointerPressed="MapControl_OnPointerPressed" 
+                                             Opacity="{Binding AppOpacity}">
+                            <avalonia:MapControl.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity"
+                                                      Duration="0:0:1"/>
+                                </Transitions>
+                            </avalonia:MapControl.Transitions>
+                        
+                        </avalonia:MapControl>
+                            
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom"
                                     Orientation="Horizontal">
@@ -260,7 +278,7 @@
                                                    FontSize="18"
                                                    Foreground="White"
                                                    FontWeight="Bold"
-                                                   IsVisible="{Binding IsPanelOpen}"
+                                                   IsVisible="{Binding IsPanel2Open}"
                                                    HorizontalAlignment="Center" />
 
                                     </Border>
@@ -394,29 +412,52 @@
 
                                 <Border Classes="Overlay" />
 
-                                <ScrollViewer>
+                                <Grid RowDefinitions="* Auto"
+                                      IsVisible="{Binding IsListOpen}"
+                                      Opacity="{Binding IconsOpacity}">
 
-                                    <!-- <ItemsControl ItemsSource="{Binding Signs}"> -->
-                                    <!-- -->
-                                    <!-- <ItemsControl.ItemsPanel> -->
-                                    <!--     <ItemsPanelTemplate> -->
-                                    <!--         <WrapPanel /> -->
-                                    <!--     </ItemsPanelTemplate> -->
-                                    <!-- </ItemsControl.ItemsPanel> -->
-                                    <!-- -->
-                                    <!-- <ItemsControl.ItemTemplate> -->
-                                    <!--     <DataTemplate> -->
-                                    <!--         <Button Width="80" -->
-                                    <!--                 Height="80" -->
-                                    <!--                 Margin="5"> -->
-                                    <!--             <Image Source="{Binding ImagePath}" /> -->
-                                    <!--         </Button> -->
-                                    <!--     </DataTemplate> -->
-                                    <!-- </ItemsControl.ItemTemplate> -->
-                                    <!-- -->
-                                    <!-- </ItemsControl> -->
-                                    <!-- -->
-                                </ScrollViewer>
+                                    <Grid.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="Opacity"
+                                                              Duration="0:0:0.5">
+                                            </DoubleTransition>
+                                        </Transitions>
+                                    </Grid.Transitions>
+
+                                    <ItemsControl Grid.Row="0"
+                                                  ItemsSource="{Binding FilteredImages}">
+
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="8"
+                                                        BorderBrush="LightGray"
+                                                        BorderThickness="1"
+                                                        CornerRadius="4">
+                                                    <Image Source="{Binding}"
+                                                           Width="90"
+                                                           Height="90"
+                                                           Stretch="Uniform" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+
+                                    </ItemsControl>
+
+                                    <Button Grid.Row="1"
+                                            Command="{Binding RightPageCommand}"
+                                            HorizontalAlignment="Right" />
+
+                                    <Button Grid.Row="1"
+                                            Command="{Binding LeftPageCommand}"
+                                            HorizontalAlignment="Left" />
+
+                                </Grid>
 
                             </Grid>
 

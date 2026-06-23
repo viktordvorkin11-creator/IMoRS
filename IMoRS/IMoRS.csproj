@@ -8,22 +8,23 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**"/>
-        <AvaloniaResource Include="Assets\DarkThemeMap.json"/>
-        <AvaloniaResource Include="Styles\**"/>
+        <AvaloniaResource Include="Assets\**" />
+        <AvaloniaResource Include="Assets\DarkThemeMap.json" />
+        <AvaloniaResource Include="Styles\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="12.0.4"/>
-        <PackageReference Include="Avalonia.Desktop" Version="12.0.4"/>
+        <PackageReference Include="Avalonia" Version="12.0.4" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
         <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4"/>
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1"/>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
         <PackageReference Include="Mapsui.Avalonia12" Version="5.1.0" />
         <PackageReference Include="Microsoft.Data.Sqlite" Version="11.0.0-preview.5.26302.115" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0-preview.5.*" />
@@ -31,7 +32,7 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0-preview.*"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0-preview.*" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0-preview.*">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -40,7 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private double arrowAngle;
 
-    [ObservableProperty] private bool isPanelOpen;
+    [ObservableProperty] private bool _isPanel2Open;
 
     [ObservableProperty] private double borderListWidth = 25;
 
@@ -54,33 +56,107 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private Bitmap userImage;
 
+    [ObservableProperty] private ObservableCollection<Bitmap> _filteredImages = new();
+
+    [ObservableProperty] private int page;
+
+    [ObservableProperty] private double iconsOpacity = 0;
+
+    [ObservableProperty] private double appOpacity = 0;
+
+    private const int PageSize = 50;
+
     private readonly MarkerService _markerService = new();
 
-    public string ArrowTransform
+    private readonly MarkerService _database = new();
+
+    private readonly List<IFeature> _markers = [];
+
+    public ObservableCollection<Bitmap> Images { get; } = new();
+
+    public int TotalPages => Images.Count == 0 ? 1 : (int)Math.Ceiling(Images.Count / (double)PageSize);
+    public string PageInfo => $"{Page + 1} / {TotalPages}";
+
+    partial void OnPageChanged(int value)
     {
-        get
-        {
-            if (IsPanelOpen)
-                return "rotate(180deg)";
-            else
-                return "rotate(0deg)";
-        }
+        if (value < 0) value = 0;
+        if (Images.Count > 0 && value >= TotalPages) value = TotalPages - 1;
+        if (Images.Count == 0) value = 0;
+
+        Page = value;
+        UpdatePage();
     }
 
     private readonly Dictionary<string, int> _bitmapIds = new();
 
-    partial void OnIsPanelOpenChanged(bool value)
-    {
-        OnPropertyChanged(nameof(ArrowTransform));
-    }
-
-    private readonly MarkerService _database = new();
-    private readonly List<IFeature> _markers = [];
-
     public MainWindowViewModel()
     {
-        ArrowAngle = 180;
+        AppOpacity = 0;
+        IconsOpacity = 0;
         CreateMap();
+        LoadImages();
+        LoadApp();
+    }
+
+    private async Task LoadApp()
+    {
+        await Task.Delay(1000);
+        AppOpacity = 1;
+    }
+
+    private void LoadImages()
+    {
+        var images = LoadAllImagesFromAssets("Assets/SignIconPng");
+
+        foreach (var img in images)
+        {
+            Images.Add(img);
+        }
+
+        UpdatePage();
+    }
+
+    private void UpdatePage()
+    {
+        if (Images == null)
+        {
+            FilteredImages = new ObservableCollection<Bitmap>();
+            return;
+        }
+        
+        var pageItems = Images
+            .Skip(Page * PageSize)
+            .Take(PageSize)
+            .ToList();
+        
+            FilteredImages = new ObservableCollection<Bitmap>(pageItems);
+    }
+
+    private List<Bitmap> LoadAllImagesFromAssets(string assetsFolderPath)
+    {
+        var bitmaps = new List<Bitmap>();
+        var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+        var folderUri = new Uri($"avares://{assemblyName}/{assetsFolderPath.TrimStart('/')}");
+        var assetUris = AssetLoader.GetAssets(folderUri, null);
+
+        Console.WriteLine(assetUris.Count());
+        foreach (var assetUri in assetUris)
+        {
+            try
+            {
+                using (var assetStream = AssetLoader.Open(assetUri))
+                {
+                    bitmaps.Add(new Bitmap(assetStream));
+                    Console.WriteLine(assetStream);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка загрузки {assetUri}: {ex.Message}");
+            }
+        }
+
+        return bitmaps;
     }
 
     private readonly MemoryLayer _markerLayer = new()
@@ -101,11 +177,11 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (string.IsNullOrEmpty(marker.IconPath))
                 continue;
-            
+
             if (!File.Exists(marker.IconPath))
             {
                 Console.WriteLine(marker.IconPath);
-                continue; 
+                continue;
             }
 
             var feature = new PointFeature(
@@ -128,18 +204,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var state = MapStateService.Load();
 
-        if (state != null)
-        {
-            map.Navigator.CenterOn(state.X, state.Y);
-            map.Navigator.ZoomTo(state.Resolution);
-        }
-        else
-        {
+        // if (state != null)
+        // {
+        //     map.Navigator.CenterOn(state.X, state.Y);
+        //     map.Navigator.ZoomTo(state.Resolution);
+        // }
+        // else
+        // {
             var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
             map.Navigator.CenterOn(centerX, centerY);
             map.Navigator.ZoomTo(12);
-        }
-        
+        // }
+
         Map = map;
         Map.Navigator.ViewportChanged += OnViewportChanged;
     }
@@ -195,7 +271,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Map?.Refresh();
     }
-    
+
+    [RelayCommand]
+    private void RightPage()
+    {
+        Page += 1;
+    }
+
+    [RelayCommand]
+    private void LeftPage()
+    {
+        Page -= 1;
+    }
 
     [RelayCommand]
     public void Close()
@@ -232,7 +319,7 @@ public partial class MainWindowViewModel : ViewModelBase
         PanelWidth1 = App.MainWindow!.Bounds.Width * 0.25;
         if (selectedMarker == null)
             return;
-        
+
         UserImage = new Bitmap(selectedMarker.ImagePath);
     }
 
@@ -247,13 +334,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         PanelWidth2 = 15;
         ArrowAngle = 180;
-        IsPanelOpen = false;
+        IsPanel2Open = false;
     }
 
     [RelayCommand]
     public void OpenPanel2()
     {
-        IsPanelOpen = true;
+        IsPanel2Open = true;
 
         PanelWidth2 = App.MainWindow!.Bounds.Width * 0.1;
         ArrowAngle = 0;
@@ -262,13 +349,15 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     public async Task OpenList()
     {
-        IsListOpen = true;
         ClosePanel1();
         ClosePanel2();
         OverlayOpacity = 0.67;
         BorderListHeight = App.MainWindow!.Bounds.Height * 0.7;
         await Task.Delay(200);
         BorderListWidth = App.MainWindow!.Bounds.Width * 0.7;
+        await Task.Delay(200);
+        IsListOpen = true;
+        IconsOpacity = 1;
     }
 
     [RelayCommand]
@@ -284,8 +373,9 @@ public partial class MainWindowViewModel : ViewModelBase
         BorderListWidth = App.MainWindow!.Bounds.Width * 0.7;
         await Task.Delay(200);
         BorderListWidth = 25;
+        IconsOpacity = 0;
     }
-    
+
     [RelayCommand]
     public async Task AddImage()
     {
@@ -306,7 +396,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 });
             if (files.Count == 0)
                 return;
-            
+
 
             var photoPath = files[0].Path.LocalPath;
 
