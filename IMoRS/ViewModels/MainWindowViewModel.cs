@@ -23,7 +23,6 @@ using Mapsui.Layers;
 using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.Tiling;
-using IMoRS.Services;
 using Mapsui.UI.Avalonia;
 
 namespace IMoRS.ViewModels;
@@ -64,6 +63,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private double appOpacity = 0;
 
+    [ObservableProperty] private bool _isMapVisible = false;
+
+    [ObservableProperty] private string _statusMessage = string.Empty;
+
     private const int PageSize = 50;
 
     private readonly MarkerService _markerService = new();
@@ -71,6 +74,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly MarkerService _database = new();
 
     private readonly List<IFeature> _markers = [];
+
+    private double? _pendingMarkerX;
+
+    private double? _pendingMarkerY;
+
+    public bool HasPendingMarker => _pendingMarkerX.HasValue && _pendingMarkerY.HasValue;
 
     public ObservableCollection<Bitmap> Images { get; } = new();
 
@@ -102,6 +111,8 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         await Task.Delay(1000);
         AppOpacity = 1;
+        await Task.Delay(1000);
+        IsMapVisible = true;
     }
 
     private void LoadImages()
@@ -123,13 +134,13 @@ public partial class MainWindowViewModel : ViewModelBase
             FilteredImages = new ObservableCollection<Bitmap>();
             return;
         }
-        
+
         var pageItems = Images
             .Skip(Page * PageSize)
             .Take(PageSize)
             .ToList();
-        
-            FilteredImages = new ObservableCollection<Bitmap>(pageItems);
+
+        FilteredImages = new ObservableCollection<Bitmap>(pageItems);
     }
 
     private List<Bitmap> LoadAllImagesFromAssets(string assetsFolderPath)
@@ -147,7 +158,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 using (var assetStream = AssetLoader.Open(assetUri))
                 {
                     bitmaps.Add(new Bitmap(assetStream));
-                    Console.WriteLine(assetStream);
                 }
             }
             catch (Exception ex)
@@ -176,11 +186,23 @@ public partial class MainWindowViewModel : ViewModelBase
         foreach (var marker in _markerService.GetAll())
         {
             if (string.IsNullOrEmpty(marker.IconPath))
-                continue;
+            {
+                var feature = new PointFeature(
+                    SphericalMercator.FromLonLat(marker.X, marker.Y));
 
+                feature.Styles.Add(new SymbolStyle());
+
+                _markers.Add(feature);
+            
+            }
+            else
+            {
+                
             if (!File.Exists(marker.IconPath))
             {
                 Console.WriteLine(marker.IconPath);
+
+
                 continue;
             }
 
@@ -191,11 +213,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
             feature.Styles.Add(new ImageStyle
             {
-                Image = $"file://{marker.IconPath}",
+                Image = "avares://IMoRS/Assets/SignIconPng/sign_6.png",
                 SymbolScale = 0.5
             });
 
             _markers.Add(feature);
+            }
+
         }
 
         _markerLayer.Features = _markers;
@@ -211,9 +235,9 @@ public partial class MainWindowViewModel : ViewModelBase
         // }
         // else
         // {
-            var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
-            map.Navigator.CenterOn(centerX, centerY);
-            map.Navigator.ZoomTo(12);
+        var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
+        map.Navigator.CenterOn(centerX, centerY);
+        map.Navigator.ZoomTo(12);
         // }
 
         Map = map;
@@ -270,6 +294,33 @@ public partial class MainWindowViewModel : ViewModelBase
         _markerService.Add(x, y);
 
         Map?.Refresh();
+    }
+
+    public void ClearPendingMarker()
+    {
+        _pendingMarkerX = null;
+        _pendingMarkerY = null;
+    }
+
+    public void SetPendingMarker(double x, double y)
+    {
+        _pendingMarkerX = x;
+        _pendingMarkerY = y;
+        StatusMessage = "Кликните по карте для выбора места";
+        IsAddingMarker = true;
+    }
+
+    [RelayCommand]
+    private void AddMarkerFromPending()
+    {
+        if (!_pendingMarkerX.HasValue || !_pendingMarkerY.HasValue)
+        {
+            return;
+        }
+
+        AddMarker(_pendingMarkerX.Value, _pendingMarkerY.Value);
+
+        ClearPendingMarker();
     }
 
     [RelayCommand]
@@ -358,6 +409,10 @@ public partial class MainWindowViewModel : ViewModelBase
         await Task.Delay(200);
         IsListOpen = true;
         IconsOpacity = 1;
+
+        IsAddingMarker = false;
+        ClearPendingMarker();
+        StatusMessage = string.Empty;
     }
 
     [RelayCommand]

@@ -134,7 +134,7 @@
             <Grid Grid.Row="1"
                   ColumnSpacing="10"
                   ColumnDefinitions="Auto *">
-
+                
                 <!--Openable Border-->
                 <Border Grid.Column="0"
                         Classes="Tile"
@@ -209,14 +209,7 @@
                         <avalonia:MapControl x:Name="mapControl"
                                              ClipToBounds="True"
                                              Map="{Binding Map}"
-                                             PointerPressed="MapControl_OnPointerPressed" 
-                                             Opacity="{Binding AppOpacity}">
-                            <avalonia:MapControl.Transitions>
-                                <Transitions>
-                                    <DoubleTransition Property="Opacity"
-                                                      Duration="0:0:1"/>
-                                </Transitions>
-                            </avalonia:MapControl.Transitions>
+                                             IsVisible="{Binding IsMapVisible}">
                         
                         </avalonia:MapControl>
                             
@@ -278,13 +271,12 @@
                                                    FontSize="18"
                                                    Foreground="White"
                                                    FontWeight="Bold"
-                                                   IsVisible="{Binding IsPanel2Open}"
                                                    HorizontalAlignment="Center" />
 
                                     </Border>
 
                                     <Button Classes="ControlButton SideButton"
-                                            Command="{Binding OpenList}">
+                                            Command="{Binding OpenListCommand}">
 
                                         <Border Classes="Tile">
 
@@ -305,49 +297,50 @@
 
                                     </Button>
 
-                                    <Button Classes="ControlButton SideButton">
+                                    <!-- <Button Classes="ControlButton SideButton"> -->
+                                    <!-- -->
+                                    <!--     <Border Classes="Tile"> -->
+                                    <!-- -->
+                                    <!--         <StackPanel Classes="StackButtonControl"> -->
+                                    <!-- -->
+                                    <!--             <Image Source="/Assets/minus.png" -->
+                                    <!--                    Height="20" -->
+                                    <!--                    Width="20" /> -->
+                                    <!-- -->
+                                    <!--             <TextBlock Text="Удалить" -->
+                                    <!--                        Foreground="White" -->
+                                    <!--                        FontWeight="Bold" -->
+                                    <!--                        FontSize="18" /> -->
+                                    <!-- -->
+                                    <!--         </StackPanel> -->
+                                    <!-- -->
+                                    <!--     </Border> -->
+                                    <!-- -->
+                                    <!-- </Button> -->
 
-                                        <Border Classes="Tile">
+                                    <!-- <Button Classes="ControlButton SideButton"> -->
+                                    <!-- -->
+                                    <!--     <Border Classes="Tile"> -->
+                                    <!-- -->
+                                    <!--         <StackPanel Classes="StackButtonControl"> -->
+                                    <!-- -->
+                                    <!--             <Image Source="/Assets/editIcon.png" -->
+                                    <!--                    Height="20" -->
+                                    <!--                    Width="20" /> -->
+                                    <!-- -->
+                                    <!--             <TextBlock Text="Изменить" -->
+                                    <!--                        Foreground="White" -->
+                                    <!--                        FontWeight="Bold" -->
+                                    <!--                        FontSize="18" /> -->
+                                    <!-- -->
+                                    <!--         </StackPanel> -->
+                                    <!-- -->
+                                    <!--     </Border> -->
+                                    <!-- -->
+                                    <!-- </Button> -->
 
-                                            <StackPanel Classes="StackButtonControl">
-
-                                                <Image Source="/Assets/minus.png"
-                                                       Height="20"
-                                                       Width="20" />
-
-                                                <TextBlock Text="Удалить"
-                                                           Foreground="White"
-                                                           FontWeight="Bold"
-                                                           FontSize="18" />
-
-                                            </StackPanel>
-
-                                        </Border>
-
-                                    </Button>
-
-                                    <Button Classes="ControlButton SideButton">
-
-                                        <Border Classes="Tile">
-
-                                            <StackPanel Classes="StackButtonControl">
-
-                                                <Image Source="/Assets/editIcon.png"
-                                                       Height="20"
-                                                       Width="20" />
-
-                                                <TextBlock Text="Изменить"
-                                                           Foreground="White"
-                                                           FontWeight="Bold"
-                                                           FontSize="18" />
-
-                                            </StackPanel>
-
-                                        </Border>
-
-                                    </Button>
-
-                                    <Button Classes="ControlButton SideButton">
+                                    <Button Classes="ControlButton SideButton"
+                                            Command="{Binding ClosePanel2Command}">
 
                                         <Border Classes="Tile">
 
@@ -360,7 +353,7 @@
                                                 <TextBlock Text="Отмена"
                                                            Foreground="White"
                                                            FontWeight="Bold"
-                                                           FontSize="18" />
+                                                           FontSize="18"/>
 
                                             </StackPanel>
 
@@ -448,14 +441,43 @@
                                         </ItemsControl.ItemTemplate>
 
                                     </ItemsControl>
-
-                                    <Button Grid.Row="1"
+                                    
+                                    <Grid Grid.Row="1"
+                                          ColumnDefinitions="* * *">
+                                        
+                                    <Button Grid.Row="0"
                                             Command="{Binding RightPageCommand}"
                                             HorizontalAlignment="Right" />
+                                    
+                                    <Button Classes="ControlButton"
+                                            Grid.Column="1"
+                                            Command="{Binding AddMarkerFromPendingCommand}">
 
-                                    <Button Grid.Row="1"
+                                        <Border Classes="Tile">
+
+                                            <StackPanel Classes="StackButtonControl">
+
+                                                <Image Source="/Assets/plus.png"
+                                                       Height="20"
+                                                       Width="20" />
+
+                                                <TextBlock Text="Добавить"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="18" />
+
+                                            </StackPanel>
+
+                                        </Border>
+
+                                    </Button>
+
+                                    <Button Grid.Row="2"
                                             Command="{Binding LeftPageCommand}"
                                             HorizontalAlignment="Left" />
+                                        
+                                    </Grid>
+
 
                                 </Grid>
 

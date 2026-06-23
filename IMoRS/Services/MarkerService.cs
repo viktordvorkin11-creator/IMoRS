@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Media.Imaging;
@@ -11,21 +12,24 @@ public class MarkerService
 {
     public void Add(double x, double y)
     {
-        using var db = new AppDbContext();
-
-        db.Markers.Add(new MarkerEntity
+        using var context = new AppDbContext();
+    
+        var marker = new MarkerEntity
         {
             X = x,
-            Y = y
-        });
-
-        db.SaveChanges();
+            Y = y,
+            ImagePath = ImageService.GetImagePath("sign_6.png") // Добавьте путь по умолчанию
+        };
+    
+        context.Markers.Add(marker);
+        context.SaveChanges();
     }
 
     public List<MarkerDto> GetAll()
     {
         using var db = new AppDbContext();
 
+        Console.WriteLine($"Найдено меток в БД: {db.Markers.Count()}");
         return db.Markers
             .Select(m => new MarkerDto
             {
@@ -36,6 +40,7 @@ public class MarkerService
                 IconPath = m.IconPath
             })
             .ToList();
+        
     }
     
     public void UpdateApp(MarkerDto dto)

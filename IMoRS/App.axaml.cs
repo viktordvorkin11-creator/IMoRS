@@ -21,8 +21,11 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        var dbContext = new AppDbContext();
-        dbContext.Database.Migrate();
+        using (var context = new AppDbContext())
+        {
+            context.Database.EnsureCreated();
+        }
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             MainWindow = new MainWindow();

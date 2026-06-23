@@ -22,13 +22,48 @@ namespace IMoRS.Views;
 
 public partial class MainWindow : Window
 {
+    private Point _pointerDownPosition;
+    private bool _isDragging;
+    
     public MainWindow()
     {
         InitializeComponent();
 
         mapControl.Info += MapControlInfo;
+        mapControl.PointerPressed += OnMapPointerPressed;
+        mapControl.PointerReleased += OnMapPointerReleased;
 
         var test = ImageService.GetImagePath("sign_6.png"); 
+    }
+    
+    private void OnMapPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _pointerDownPosition = e.GetPosition(mapControl);
+        _isDragging = false;
+    }
+
+    private void OnMapPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        var currentPosition = e.GetPosition(mapControl);
+        var delta = _pointerDownPosition - currentPosition;
+    
+        if (Math.Abs(delta.X) > 5 || Math.Abs(delta.Y) > 5)
+        {
+            return;
+        }
+    
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.ClosePanel1Command.Execute(null);
+            if (vm.IsPanel2Open)
+            {
+                vm.ClosePanel2Command.Execute(null);
+            }
+            else
+            {
+                vm.OpenPanel2Command.Execute(null);
+            }
+        }
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
@@ -84,16 +119,26 @@ public partial class MainWindow : Window
         if (DataContext is not MainWindowViewModel vm)
             return;
 
-        var mapInfo = e.GetMapInfo(e.Map.Layers);
-
+        // Получаем MapInfo через метод GetMapInfo
+        var mapInfo = e.GetMapInfo(mapControl.Map.Layers);
+    
+        // Проверяем клик по существующему маркеру
         if (mapInfo?.Feature is PointFeature feature)
         {
             if (feature["Marker"] is MarkerDto marker)
             {
                 vm.SelectedMarker = marker;
-
                 vm.OpenPanel1Command.Execute(null);
+                vm.ClearPendingMarker();
+                return;
             }
+        }
+
+        // Получаем координаты клика из WorldPosition
+        if (e.WorldPosition != null)
+        {
+            var (lon, lat) = SphericalMercator.ToLonLat(e.WorldPosition.X, e.WorldPosition.Y);
+            vm.SetPendingMarker(lon, lat);
         }
     }
 
