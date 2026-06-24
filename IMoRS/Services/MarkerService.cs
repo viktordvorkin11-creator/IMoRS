@@ -63,4 +63,17 @@ public class MarkerService
 
         db.SaveChanges();
     }
+    
+    public void Delete(int markerId)
+    {
+        using var db = new AppDbContext();
+
+        var marker = db.Markers.Find(markerId);
+
+        if (marker == null)
+            return;
+
+        db.Markers.Remove(marker);
+        db.SaveChanges();
+    }
 }

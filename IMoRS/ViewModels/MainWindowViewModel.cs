@@ -35,6 +35,8 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     [ObservableProperty] private Map? _map;
 
+    [ObservableProperty] private double imDescOpacity = 0;
+
     [ObservableProperty] private bool isMaximized = false;
 
     [ObservableProperty] private double panelWidth1 = 30;
@@ -77,6 +79,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private bool _isImageAdded = false;
     
+    [ObservableProperty] private bool _isPanel1Open = false;
+
     public ObservableCollection<SignItem> Images { get; set; }
 
     private const int PageSize = 50;
@@ -222,7 +226,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         double scale = 0.15;
 
-        if (resolution > 500)
+        if (resolution > 1000)
         {
             scale = 0;
         }
@@ -363,7 +367,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void OpenPanel1()
+    public async Task OpenPanel1()
     {
         PanelWidth1 = App.MainWindow!.Bounds.Width * 0.25;
         if (SelectedMarker == null)
@@ -379,12 +383,21 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         IsImageAdded = UserImage != null;
+
+        await Task.Delay(300);
+        ImDescOpacity = 1;
+        IsPanel1Open = true;
     }
 
     [RelayCommand]
-    public void ClosePanel1()
+    public async Task ClosePanel1()
     {
+        if (!IsPanel1Open)
+            return;
         PanelWidth1 = 30;
+        ImDescOpacity = 0;
+        await Task.Delay(175);
+        IsPanel1Open = false;
     }
 
     [RelayCommand]
@@ -479,5 +492,29 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             img.IsSelected = img == item;
         }
+    }
+    
+    [RelayCommand]
+    private void DeleteMarker()
+    {
+        if (SelectedMarker == null)
+            return;
+
+        _markerService.Delete(SelectedMarker.Id);
+
+        var feature = _markers.FirstOrDefault(f =>
+            f["Marker"] is MarkerDto dto &&
+            dto.Id == SelectedMarker.Id);
+
+        if (feature != null)
+            _markers.Remove(feature);
+
+        _markerLayer.Features = _markers;
+        _markerLayer.DataHasChanged();
+        Map?.Refresh();
+
+        SelectedMarker = null;
+
+        ClosePanel1();
     }
 }

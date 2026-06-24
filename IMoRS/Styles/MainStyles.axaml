@@ -185,32 +185,32 @@
         <Setter Property="CornerRadius" Value="10" />
     </Style>
     <Style Selector="StackPanel.StackButtonControl">
-        <Setter Property="HorizontalAlignment" Value="Left"/>
-        <Setter Property="Margin" Value="10"/>
-        <Setter Property="Orientation" Value="Horizontal"/>
-        <Setter Property="Spacing" Value="10"/>
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Margin" Value="10" />
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="Spacing" Value="10" />
     </Style>
     <Style Selector="Button.SideButton">
-        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
         <Setter Property="RenderTransform">
-            <ScaleTransform ScaleX="1" ScaleY="1"/>
+            <ScaleTransform ScaleX="1" ScaleY="1" />
         </Setter>
         <Setter Property="Transitions">
             <Transitions>
                 <TransformOperationsTransition
                     Property="RenderTransform"
-                    Duration="0:0:0.15"/>
+                    Duration="0:0:0.15" />
             </Transitions>
         </Setter>
         <Style Selector="^:pointerover">
-            <Setter Property="RenderTransform" Value="scale(1.05)"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="RenderTransform" Value="scale(1.05)" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="^:pressed">
-            <Setter Property="RenderTransform" Value="scale(0.95)"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="RenderTransform" Value="scale(0.95)" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </Style>
     <Style Selector="Button.OpenFolderButton">
@@ -220,5 +220,40 @@
         <Style Selector="^:pressed /template/ContentPresenter">
             <Setter Property="Background" Value="#5c1e9c" />
         </Style>
+    </Style>
+    <Style Selector="Button.GradientButton">
+        <Setter Property="Background" Value="#FF6F1899"/>
+        <Style Selector="^:pointerover /template/ContentPresenter">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
+                    <GradientStop Color="#FFB71CFF" Offset="0" />
+                    <GradientStop Color="#FF6F1899" Offset="1" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="^:pressed /template/ContentPresenter">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
+                    <GradientStop Color="#FFA71DFF" Offset="0" />
+                    <GradientStop Color="#FF4F1899" Offset="1" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="^:disable /template/ContentPresenter">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
+                    <GradientStop Color="#FFB71CFF" Offset="0" />
+                    <GradientStop Color="#FF6F1899" Offset="1" />
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+    </Style>
+    <Style Selector="TextBox.Desc">
+        <Style Selector="^:pointerover /template/Border#border">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+    </Style>
+    <Style Selector="Border.ConfirmDeleteDialog">
+        
     </Style>
 </Styles>

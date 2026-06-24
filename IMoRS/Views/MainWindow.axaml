@@ -26,7 +26,7 @@
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
-    
+
     <Window.Resources>
         <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" />
     </Window.Resources>
@@ -156,7 +156,7 @@
                     </Border.Transitions>
 
                     <Grid RowSpacing="10">
-
+                        
                         <Grid.RowDefinitions>
 
                             <RowDefinition Height="6*" />
@@ -169,7 +169,15 @@
                                 Classes="Tile">
 
                             <Grid HorizontalAlignment="Center"
-                                  VerticalAlignment="Center">
+                                  VerticalAlignment="Center"
+                                  Opacity="{Binding ImDescOpacity}">
+                                
+                                <Grid.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity"
+                                                          Duration="0:0:0.5"/>
+                                    </Transitions>
+                                </Grid.Transitions>
 
                                 <Image Source="{Binding UserImage}"
                                        Stretch="Uniform"
@@ -201,7 +209,93 @@
                         <!--Description Border-->
                         <Border Grid.Row="1"
                                 Classes="Tile">
+                        <Grid RowDefinitions="* Auto"
+                              Opacity="{Binding ImDescOpacity}">
+                            
+                            <Grid.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity"
+                                                      Duration="0:0:0.5"/>
+                                </Transitions>
+                            </Grid.Transitions>
 
+                            <Border Grid.Row="0"
+                                    Background="#FFB71CFF"
+                                    CornerRadius="10">
+                                
+                                <TextBlock Text="{}"
+                                           Foreground="White" />
+                                
+                            </Border>
+                            
+                            <TextBox Grid.Row="0"
+                                     Classes="Desc"
+                                     CornerRadius="10"
+                                     Watermark="Придумайте описание"
+                                     Background="#FFB71CFF"
+                                     Foreground="White" />
+
+                            <StackPanel Grid.Row="1"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Center">
+
+                                <Button Classes="ControlButton SideButton GradientButton"
+                                        Command="{Binding DeleteMarkerCommand}">
+
+                                    <StackPanel Classes="StackButtonControl">
+
+                                        <Image Source="/Assets/minus.png"
+                                               Height="15"
+                                               Width="15" />
+
+                                        <TextBlock Text="Удалить"
+                                                   Foreground="White"
+                                                   FontWeight="Bold"
+                                                   FontSize="15" />
+
+                                    </StackPanel>
+
+                                </Button>
+
+                                <Button Classes="ControlButton SideButton GradientButton">
+
+                                    <StackPanel Classes="StackButtonControl">
+
+                                        <Image Source="/Assets/editIcon.png"
+                                               Height="15"
+                                               Width="15" />
+
+                                        <TextBlock Text="Изменить"
+                                                   Foreground="White"
+                                                   FontWeight="Bold"
+                                                   FontSize="15" />
+
+                                    </StackPanel>
+
+                                </Button>
+
+                                <Button Classes="ControlButton SideButton GradientButton"
+                                        Command="{Binding ClosePanel1Command}">
+
+                                    <StackPanel Classes="StackButtonControl">
+
+                                        <Image Source="/Assets/cross.png"
+                                               Height="20"
+                                               Width="20" />
+
+                                        <TextBlock Text="Отмена"
+                                                   Foreground="White"
+                                                   FontWeight="Bold"
+                                                   FontSize="15" />
+
+                                    </StackPanel>
+
+                                </Button>
+
+                            </StackPanel>
+
+                        </Grid>
+                            
                         </Border>
 
                     </Grid>
@@ -224,39 +318,6 @@
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom"
                                     Orientation="Horizontal">
-
-                            <Button VerticalAlignment="Center"
-                                    CornerRadius="20"
-                                    Padding="0"
-                                    Margin="0,10"
-                                    Command="{Binding OpenPanel2}"
-                                    Classes="SideButton">
-
-                                <Border Classes="Tile"
-                                        Background="#F809030E"
-                                        CornerRadius="20">
-
-                                    <Grid Width="30"
-                                          Height="30"
-                                          RenderTransformOrigin="0.5,0.5">
-
-                                        <Grid.RenderTransform>
-                                            <RotateTransform Angle="{Binding ArrowAngle}"
-                                                             CenterX="15"
-                                                             CenterY="15" />
-                                        </Grid.RenderTransform>
-
-                                        <Image Source="/Assets/openIcon.png"
-                                               Width="15"
-                                               Height="15"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center" />
-
-                                    </Grid>
-
-                                </Border>
-
-                            </Button>
 
                             <Border Classes="Tile"
                                     Background="#F809030E"
@@ -283,7 +344,7 @@
 
                                     </Border>
 
-                                    <Button Classes="ControlButton SideButton"
+                                    <Button Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding OpenListCommand}">
 
                                         <Border Classes="Tile">
@@ -305,49 +366,8 @@
 
                                     </Button>
 
-                                    <!-- <Button Classes="ControlButton SideButton"> -->
-                                    <!-- -->
-                                    <!--     <Border Classes="Tile"> -->
-                                    <!-- -->
-                                    <!--         <StackPanel Classes="StackButtonControl"> -->
-                                    <!-- -->
-                                    <!--             <Image Source="/Assets/minus.png" -->
-                                    <!--                    Height="20" -->
-                                    <!--                    Width="20" /> -->
-                                    <!-- -->
-                                    <!--             <TextBlock Text="Удалить" -->
-                                    <!--                        Foreground="White" -->
-                                    <!--                        FontWeight="Bold" -->
-                                    <!--                        FontSize="18" /> -->
-                                    <!-- -->
-                                    <!--         </StackPanel> -->
-                                    <!-- -->
-                                    <!--     </Border> -->
-                                    <!-- -->
-                                    <!-- </Button> -->
 
-                                    <!-- <Button Classes="ControlButton SideButton"> -->
-                                    <!-- -->
-                                    <!--     <Border Classes="Tile"> -->
-                                    <!-- -->
-                                    <!--         <StackPanel Classes="StackButtonControl"> -->
-                                    <!-- -->
-                                    <!--             <Image Source="/Assets/editIcon.png" -->
-                                    <!--                    Height="20" -->
-                                    <!--                    Width="20" /> -->
-                                    <!-- -->
-                                    <!--             <TextBlock Text="Изменить" -->
-                                    <!--                        Foreground="White" -->
-                                    <!--                        FontWeight="Bold" -->
-                                    <!--                        FontSize="18" /> -->
-                                    <!-- -->
-                                    <!--         </StackPanel> -->
-                                    <!-- -->
-                                    <!--     </Border> -->
-                                    <!-- -->
-                                    <!-- </Button> -->
-
-                                    <Button Classes="ControlButton SideButton"
+                                    <Button Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding ClosePanel2Command}">
 
                                         <Border Classes="Tile">
@@ -435,7 +455,7 @@
 
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Button
+                                                    <Button Classes="GradientButton SideButton"
                                                         Command="{Binding $parent[Window].DataContext.SelectIconCommand}"
                                                         CommandParameter="{Binding}"
                                                         Padding="5">
@@ -444,7 +464,7 @@
                                                                 BorderBrush="{Binding IsSelected, Converter={StaticResource BoolToBrushConverter}}">
                                                             <Image Source="{Binding Image}"
                                                                    Width="64"
-                                                                   Height="64"/>
+                                                                   Height="64" />
                                                         </Border>
                                                     </Button>
                                                 </DataTemplate>
@@ -455,7 +475,8 @@
                                     <Grid Grid.Row="1"
                                           ColumnDefinitions="* * *">
 
-                                        <Button Classes="ControlButton"
+                                        <Button Classes="ControlButton GradientButton"
+                                                Background="Transparent"
                                                 Grid.Column="1"
                                                 Command="{Binding AddMarkerFromPendingCommand}">
 

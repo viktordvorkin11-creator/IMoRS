@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="IMoRS.Views.ConfirmDelete"
+        Title="ConfirmDelete"
+        Width="300" Height="150"
+        WindowDecorations="None"
+        WindowStartupLocation="CenterOwner"
+        Background="Transparent">
+        
+        <Window.Styles>
+                <StyleInclude Source="/Styles/MainStyles.axaml" />
+        </Window.Styles>
+        
+        <Border Classes="ConfirmDeleteDialog">
+                <StackPanel Margin="20" Spacing="16">
+                        <TextBlock x:Name="Title" />
+                </StackPanel>
+        </Border>
+        
+        
+    
+</Window>
