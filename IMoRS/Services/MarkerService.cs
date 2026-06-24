@@ -41,7 +41,8 @@ public class MarkerService
                 X = m.X,
                 Y = m.Y,
                 Description = m.Description,
-                IconPath = m.IconPath
+                IconPath = m.IconPath,
+                ImagePath = m.ImagePath
             })
             .ToList();
     }
@@ -57,8 +58,8 @@ public class MarkerService
         entity.X = dto.X;
         entity.Y = dto.Y;
         entity.Description = dto.Description;
-        entity.ImagePath = dto.ImagePath;
-        entity.IconPath = dto.IconPath;
+        entity.ImagePath = dto.ImagePath ?? string.Empty;
+        entity.IconPath = dto.IconPath ?? string.Empty;
 
         db.SaveChanges();
     }

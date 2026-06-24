@@ -23,45 +23,60 @@ namespace IMoRS.Views;
 public partial class MainWindow : Window
 {
     private Point _pointerDownPosition;
+    private bool _isPressed;
     private bool _isDragging;
-    
+    private bool _isMarkerClicked;
+
     public MainWindow()
     {
         InitializeComponent();
 
         mapControl.Info += MapControlInfo;
         mapControl.PointerPressed += OnMapPointerPressed;
+        mapControl.PointerMoved += OnMapPointerMoved;
         mapControl.PointerReleased += OnMapPointerReleased;
     }
-    
+
     private void OnMapPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         _pointerDownPosition = e.GetPosition(mapControl);
         _isDragging = false;
+        _isPressed = true;
+    }
+
+    private void OnMapPointerMoved(object? sender, PointerEventArgs e)
+    { 
+        if (_isPressed && DataContext is MainWindowViewModel vm)
+        {
+            var currentPosition = e.GetPosition(mapControl);
+            var delta = _pointerDownPosition - currentPosition;
+        
+            if (Math.Abs(delta.X) > 5 || Math.Abs(delta.Y) > 5)
+            {
+                _isDragging = true;
+                vm.ClosePanel2Command.Execute(null);
+                vm.ClosePanel1Command.Execute(null);
+            }
+        }
     }
 
     private void OnMapPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        var currentPosition = e.GetPosition(mapControl);
-        var delta = _pointerDownPosition - currentPosition;
-    
-        if (Math.Abs(delta.X) > 5 || Math.Abs(delta.Y) > 5)
+        if (_isMarkerClicked)
         {
+            _isMarkerClicked = false;
+            _isPressed = false;
             return;
         }
-    
-        if (DataContext is MainWindowViewModel vm)
+
+        if (!_isDragging && DataContext is MainWindowViewModel vm)
         {
             vm.ClosePanel1Command.Execute(null);
-            if (vm.IsPanel2Open)
-            {
-                vm.ClosePanel2Command.Execute(null);
-            }
-            else
-            {
-                vm.OpenPanel2Command.Execute(null);
-            }
+            vm.OpenPanel2Command.Execute(null);
         }
+    
+        _isPressed = false;
+        _isDragging = false;
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
@@ -96,35 +111,18 @@ public partial class MainWindow : Window
         WindowState = WindowState.Minimized;
     }
 
-    private void MapControl_OnPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.ClosePanel1Command.Execute(null);
-            if (vm.IsPanel2Open)
-            {
-                vm.ClosePanel2Command.Execute(null);
-            }
-            else
-            {
-                vm.OpenPanel2Command.Execute(null);
-            }   
-        }
-    }
-
     private void MapControlInfo(object? sender, MapInfoEventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm)
             return;
 
-        // Получаем MapInfo через метод GetMapInfo
         var mapInfo = e.GetMapInfo(mapControl.Map.Layers);
-    
-        // Проверяем клик по существующему маркеру
+
         if (mapInfo?.Feature is PointFeature feature)
         {
             if (feature["Marker"] is MarkerDto marker)
             {
+                _isMarkerClicked = true;
                 vm.SelectedMarker = marker;
                 vm.OpenPanel1Command.Execute(null);
                 vm.ClearPendingMarker();
@@ -132,16 +130,10 @@ public partial class MainWindow : Window
             }
         }
 
-        // Получаем координаты клика из WorldPosition
         if (e.WorldPosition != null)
         {
             var (lon, lat) = SphericalMercator.ToLonLat(e.WorldPosition.X, e.WorldPosition.Y);
-            vm.SetPendingMarker(lon, lat);  // <-- ЭТОТ МЕТОД ДОЛЖЕН ВЫЗЫВАТЬСЯ
-            Console.WriteLine($"Pending marker set: {lon}, {lat}");
-        }
-        else
-        {
-            Console.WriteLine("WorldPosition is NULL");
+            vm.SetPendingMarker(lon, lat); 
         }
     }
 

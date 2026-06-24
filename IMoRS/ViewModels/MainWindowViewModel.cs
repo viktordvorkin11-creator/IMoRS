@@ -74,8 +74,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private SignItem? selectedSign;
 
     [ObservableProperty] private ObservableCollection<SignItem> _filteredImages = new();
-    public ObservableCollection<SignItem> Images { get; set; }
+
+    [ObservableProperty] private bool _isImageAdded = false;
     
+    public ObservableCollection<SignItem> Images { get; set; }
+
     private const int PageSize = 50;
 
     private readonly MarkerService _markerService = new();
@@ -96,7 +99,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel()
     {
         Images = new ObservableCollection<SignItem>();
-        
+
         AppOpacity = 0;
         IconsOpacity = 0;
         CreateMap();
@@ -120,7 +123,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Images.Add(item);
         }
-        
+
         FilteredImages = new ObservableCollection<SignItem>(Images);
     }
 
@@ -170,10 +173,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 iconPath = SaveIconToTemp(iconPath);
                 marker.IconPath = iconPath; // Обновляем в DTO
             }
-        
+
             if (!File.Exists(iconPath))
             {
-                Console.WriteLine($"Warning: Icon file not found: {iconPath}");
                 continue;
             }
 
@@ -185,19 +187,28 @@ public partial class MainWindowViewModel : ViewModelBase
             feature.Styles.Add(new ImageStyle
             {
                 Image = $"file://{iconPath}",
-                SymbolScale = 0.5
+                SymbolScale = 0.2
             });
 
             _markers.Add(feature);
-            Console.WriteLine($"Added marker: {marker.X}, {marker.Y}");
         }
 
         _markerLayer.Features = _markers;
         map.Layers.Add(_markerLayer);
-        
-        var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
-        map.Navigator.CenterOn(centerX, centerY);
-        map.Navigator.ZoomTo(12);
+
+        var state = MapStateService.Load();
+
+        if (state != null && state.X > 0 && state.Y > 0)
+        {
+            map.Navigator.CenterOn(state.X, state.Y);
+            map.Navigator.ZoomTo(state.Resolution > 0 ? state.Resolution : 12);
+        }
+        else
+        {
+            var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
+            map.Navigator.CenterOn(centerX, centerY);
+            map.Navigator.ZoomTo(12);
+        }
 
         Map = map;
         Map.Navigator.ViewportChanged += OnViewportChanged;
@@ -209,26 +220,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var resolution = Map.Navigator.Viewport.Resolution;
 
-        double scale;
-        double baseSize = 0.5;
+        double scale = 0.15;
 
-        if (resolution > 5000)
+        if (resolution > 500)
         {
-            scale = baseSize;
-        }
-        else if (resolution > 1000)
-        {
-            double t = (5000 - resolution) / 4000;
-            scale = baseSize * (1 - t * 0.7);
-        }
-        else
-        {
-            scale = baseSize * 0.3;
+            scale = 0;
         }
 
         foreach (var feature in _markerLayer.Features)
         {
-            var style = feature.Styles.OfType<SymbolStyle>().FirstOrDefault();
+            var style = feature.Styles.OfType<ImageStyle>().FirstOrDefault();
 
             if (style != null)
             {
@@ -238,55 +239,44 @@ public partial class MainWindowViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(Map));
     }
-    
+
     private string SaveIconToTemp(string avaresPath)
     {
         try
         {
             var fileName = Path.GetFileName(avaresPath);
             var tempPath = Path.Combine(Path.GetTempPath(), "IMoRS", fileName);
-        
+
             Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
-        
+
             if (File.Exists(tempPath))
                 return tempPath;
-        
+
             using var stream = AssetLoader.Open(new Uri(avaresPath));
             using var fileStream = File.Create(tempPath);
             stream.CopyTo(fileStream);
-        
-            Console.WriteLine($"Saved icon to: {tempPath}");
+
             return tempPath;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error saving icon: {ex.Message}");
             return avaresPath;
         }
     }
 
     private void AddMarker(double x, double y, string iconPath)
     {
-        Console.WriteLine($"=== ADD MARKER START ===");
-        Console.WriteLine($"Coordinates (Lon/Lat): {x}, {y}");
-        Console.WriteLine($"Icon path: {iconPath}");
-    
-        // Сохраняем иконку в temp и получаем физический путь
         var physicalPath = SaveIconToTemp(iconPath);
-        Console.WriteLine($"Physical path: {physicalPath}");
-        Console.WriteLine($"Icon exists: {File.Exists(physicalPath)}");
-    
+
         if (_markerLayer == null || Map == null)
             return;
-    
+
         _markerService.Add(x, y, physicalPath);
-        Console.WriteLine("Marker saved to database");
-    
+
         var (mercatorX, mercatorY) = SphericalMercator.FromLonLat(x, y);
-        Console.WriteLine($"Mercator coordinates: {mercatorX}, {mercatorY}");
-    
+
         var feature = new PointFeature(mercatorX, mercatorY);
-    
+
         var markerDto = new MarkerDto
         {
             X = x,
@@ -295,34 +285,26 @@ public partial class MainWindowViewModel : ViewModelBase
             ImagePath = physicalPath
         };
         feature["Marker"] = markerDto;
-    
+
         var imageStyle = new ImageStyle
         {
             Image = $"file://{physicalPath}",
-            SymbolScale = 0.5,
+            SymbolScale = 0.2,
             Opacity = 1,
             Enabled = true,
         };
-        
+
         feature.Styles.Add(imageStyle);
-        Console.WriteLine("Style added to feature");
-    
+
         _markers.Add(feature);
-        Console.WriteLine($"Total markers in collection: {_markers.Count}");
-    
+
         _markerLayer.Features = new List<IFeature>(_markers);
-        Console.WriteLine($"Layer features in Map: {_markerLayer.Features.Count()}");
-        Console.WriteLine($"First feature: {_markerLayer.Features.FirstOrDefault()?.GetType()}");
-        Console.WriteLine($"Layer features count: {_markerLayer.Features.Count()}");
-    
+
         _markerLayer.Enabled = true;
-        
+
         _markerLayer.DataHasChanged();
-        Console.WriteLine("DataHasChanged called");
-    
+
         Map.Refresh();
-        Console.WriteLine("Map refreshed");
-        Console.WriteLine($"=== ADD MARKER END ===");
     }
 
     public void ClearPendingMarker()
@@ -335,40 +317,20 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _pendingMarkerX = x;
         _pendingMarkerY = y;
-        StatusMessage = "Кликните по карте для выбора места";
         IsAddingMarker = true;
-        Console.WriteLine($"SetPendingMarker called: {x}, {y}"); // Добавьте это
     }
-    
+
     [RelayCommand]
     private void AddMarkerFromPending()
     {
-        Console.WriteLine("=== AddMarkerFromPending START ===");
-    
         CloseList();
-    
-        if (!_pendingMarkerX.HasValue || !_pendingMarkerY.HasValue)
-        {
-            Console.WriteLine("No pending marker coordinates");
-            return;
-        }
-    
-        if (SelectedSign == null)
-        {
-            Console.WriteLine("No sign selected");
-            return;
-        }
-    
-        Console.WriteLine($"Selected sign path: {SelectedSign.Path}");
-        Console.WriteLine($"Pending coords: {_pendingMarkerX.Value}, {_pendingMarkerY.Value}");
-    
+
         AddMarker(
             _pendingMarkerX.Value,
             _pendingMarkerY.Value,
             SelectedSign.Path);
 
         ClearPendingMarker();
-        Console.WriteLine("=== AddMarkerFromPending END ===");
     }
 
     [RelayCommand]
@@ -407,7 +369,16 @@ public partial class MainWindowViewModel : ViewModelBase
         if (SelectedMarker == null)
             return;
 
-        UserImage = new Bitmap(SelectedMarker.ImagePath);
+        if (!string.IsNullOrEmpty(SelectedMarker.ImagePath) && File.Exists(SelectedMarker.ImagePath))
+        {
+            UserImage = new Bitmap(SelectedMarker.ImagePath);
+        }
+        else
+        {
+            UserImage = null;
+        }
+
+        IsImageAdded = UserImage != null;
     }
 
     [RelayCommand]
@@ -494,6 +465,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _markerService.UpdateApp(SelectedMarker);
 
             UserImage = new Bitmap(photoPath);
+            IsImageAdded = true;
         }
     }
 

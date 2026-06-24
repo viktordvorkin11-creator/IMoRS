@@ -172,6 +172,7 @@
                                   VerticalAlignment="Center">
 
                                 <Image Source="{Binding UserImage}"
+                                       Stretch="Uniform"
                                        Margin="10">
                                 </Image>
 
@@ -181,6 +182,7 @@
                                         Padding="0"
                                         CornerRadius="10"
                                         Classes="SideButton OpenFolderButton"
+                                        IsVisible="{Binding !IsImageAdded}"
                                         Command="{Binding AddImage}">
 
                                     <Border Classes="Tile">
