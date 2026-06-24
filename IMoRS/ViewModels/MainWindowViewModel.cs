@@ -77,9 +77,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private ObservableCollection<SignItem> _filteredImages = new();
 
-    [ObservableProperty] private bool _isImageAdded = false;
-    
+    [ObservableProperty] private bool _isEditing = false;
+
     [ObservableProperty] private bool _isPanel1Open = false;
+
+    [ObservableProperty] private double editPartsOpacity = 0;
 
     public ObservableCollection<SignItem> Images { get; set; }
 
@@ -169,13 +171,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
         foreach (var marker in _markerService.GetAll())
         {
-            // Конвертируем путь если это avares
             var iconPath = marker.IconPath;
             if (iconPath.StartsWith("avares://"))
             {
-                // Если путь из ресурсов, сохраняем во временную папку
                 iconPath = SaveIconToTemp(iconPath);
-                marker.IconPath = iconPath; // Обновляем в DTO
+                marker.IconPath = iconPath; 
             }
 
             if (!File.Exists(iconPath))
@@ -190,7 +190,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             feature.Styles.Add(new ImageStyle
             {
-                Image = $"file://{iconPath}",
+                Image = $"file://{marker.ImagePath}",
                 SymbolScale = 0.2
             });
 
@@ -216,6 +216,44 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Map = map;
         Map.Navigator.ViewportChanged += OnViewportChanged;
+    }
+    
+    private void UpdateMarkerOnMap(MarkerDto marker)
+    {
+        if (_markerLayer == null || Map == null)
+            return;
+
+        // Находим существующий feature для этого маркера
+        var feature = _markers.FirstOrDefault(f =>
+        {
+            if (f["Marker"] is MarkerDto dto)
+                return dto.Id == marker.Id;
+            return false;
+        });
+
+        if (feature == null)
+            return;
+
+        // Удаляем старые стили
+        feature.Styles.Clear();
+
+        // Создаем новый стиль с обновленным изображением
+        var imageStyle = new ImageStyle
+        {
+            Image = $"file://{marker.ImagePath}",
+            SymbolScale = 0.2,
+            Opacity = 1,
+            Enabled = true,
+        };
+
+        feature.Styles.Add(imageStyle);
+    
+        // Обновляем данные в feature
+        feature["Marker"] = marker;
+
+        // Обновляем слой
+        _markerLayer.DataHasChanged();
+        Map.Refresh();
     }
 
     private void OnViewportChanged(object? sender, EventArgs e)
@@ -292,7 +330,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var imageStyle = new ImageStyle
         {
-            Image = $"file://{physicalPath}",
+            Image = $"file://{markerDto.ImagePath}",
             SymbolScale = 0.2,
             Opacity = 1,
             Enabled = true,
@@ -382,7 +420,7 @@ public partial class MainWindowViewModel : ViewModelBase
             UserImage = null;
         }
 
-        IsImageAdded = UserImage != null;
+        // IsImageAdded = UserImage != null;
 
         await Task.Delay(300);
         ImDescOpacity = 1;
@@ -398,6 +436,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ImDescOpacity = 0;
         await Task.Delay(175);
         IsPanel1Open = false;
+        IsEditing = false;
     }
 
     [RelayCommand]
@@ -451,36 +490,86 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task AddImage()
+public async Task AddImage()
+{
+    if (App.MainWindow != null)
     {
-        if (App.MainWindow != null)
-        {
-            var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(
-                new FilePickerOpenOptions
-                {
-                    Title = "Выберите изображение",
-                    AllowMultiple = false,
-                    FileTypeFilter =
-                    [
-                        new FilePickerFileType("Изображения")
-                        {
-                            Patterns = ["*.jpg", "*.jpeg", "*.png"]
-                        }
-                    ]
-                });
-            if (files.Count == 0)
-                return;
+        // Получаем путь к папке Assets/SignIconPng
+        var defaultFolder = GetAssetsFolderPath();
+        
+        var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Выберите изображение",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Изображения")
+                    {
+                        Patterns = ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif"]
+                    }
+                ],
+                // Устанавливаем начальную папку
+                SuggestedStartLocation = await App.MainWindow.StorageProvider.TryGetFolderFromPathAsync(defaultFolder)
+            });
+            
+        if (files.Count == 0)
+            return;
 
+        var photoPath = files[0].Path.LocalPath;
 
-            var photoPath = files[0].Path.LocalPath;
+        SelectedMarker.ImagePath = photoPath;
+        _markerService.UpdateApp(SelectedMarker);
 
-            SelectedMarker.ImagePath = photoPath;
-            _markerService.UpdateApp(SelectedMarker);
+        UpdateMarkerOnMap(SelectedMarker);
 
-            UserImage = new Bitmap(photoPath);
-            IsImageAdded = true;
-        }
+        UserImage = new Bitmap(photoPath);
     }
+}
+
+private string GetAssetsFolderPath()
+{
+    try
+    {
+        // Получаем путь к папке Assets в проекте
+        var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+        var directory = Path.GetDirectoryName(assemblyLocation);
+        
+        // Вариант 1: Если сборка в папке bin/Debug или bin/Release
+        var projectPath = Directory.GetParent(directory)?.Parent?.Parent?.Parent?.FullName;
+        if (projectPath != null)
+        {
+            var assetsPath = Path.Combine(projectPath, "Assets", "SignIconPng");
+            if (Directory.Exists(assetsPath))
+                return assetsPath;
+        }
+        
+        // Вариант 2: Если сборка в папке с проектом
+        var currentDir = Directory.GetCurrentDirectory();
+        var possiblePath = Path.Combine(currentDir, "Assets", "SignIconPng");
+        if (Directory.Exists(possiblePath))
+            return possiblePath;
+        
+        // Вариант 3: Поиск вверх по дереву папок
+        var dir = new DirectoryInfo(currentDir);
+        while (dir != null)
+        {
+            var testPath = Path.Combine(dir.FullName, "Assets", "SignIconPng");
+            if (Directory.Exists(testPath))
+                return testPath;
+            dir = dir.Parent;
+        }
+        
+        // Если ничего не найдено, возвращаем папку "Изображения" пользователя
+        return Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+    }
+    catch
+    {
+        // В случае ошибки возвращаем папку "Изображения" пользователя
+        return Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+    }
+}
 
     [RelayCommand]
     private void SelectIcon(SignItem item)
@@ -516,5 +605,12 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedMarker = null;
 
         ClosePanel1();
+    }
+
+    [RelayCommand]
+    private void EditMarker()
+    {
+        IsEditing = true;
+        EditPartsOpacity = 1;
     }
 }

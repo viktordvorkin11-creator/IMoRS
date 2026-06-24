@@ -213,7 +213,18 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </Style>
-    <Style Selector="Button.OpenFolderButton">
+    <Style Selector="Button.EditIconButton">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity"
+                                  Duration="0:0:0.5" />
+            </Transitions>
+        </Setter>
+        <Setter Property="Margin" Value="70" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
         <Style Selector="^:pointerover /template/ContentPresenter">
             <Setter Property="Background" Value="#FF5500AA" />
         </Style>
@@ -222,7 +233,7 @@
         </Style>
     </Style>
     <Style Selector="Button.GradientButton">
-        <Setter Property="Background" Value="#FF6F1899"/>
+        <Setter Property="Background" Value="#FF6F1899" />
         <Style Selector="^:pointerover /template/ContentPresenter">
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
@@ -250,10 +261,21 @@
     </Style>
     <Style Selector="TextBox.Desc">
         <Style Selector="^:pointerover /template/Border#border">
-            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="Opacity" Value="0" />
         </Style>
     </Style>
     <Style Selector="Border.ConfirmDeleteDialog">
-        
+
+    </Style>
+    <Style Selector="Border.GradientBorderBrush">
+        <Setter Property="BorderBrush">
+            <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
+                <GradientStop Color="#FFFF1899" Offset="0" />
+                <GradientStop Color="#FFB93CFF" Offset="0.25" />
+                <GradientStop Color="#FFB71CFF" Offset="0.5" />
+                <GradientStop Color="#FF6F1899" Offset="0.75" />
+                <GradientStop Color="#FF4F1899" Offset="1" />
+            </LinearGradientBrush>
+        </Setter>
     </Style>
 </Styles>
