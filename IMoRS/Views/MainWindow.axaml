@@ -3,6 +3,8 @@
         xmlns:mapsui="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.Avalonia"
         xmlns:vm="using:IMoRS.ViewModels"
         xmlns:avalonia="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.UI.Avalonia"
+        xmlns:converters="using:IMoRS.Converters"
+
         x:Class="IMoRS.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/IMoRS.ico"
@@ -24,6 +26,10 @@
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
+    
+    <Window.Resources>
+        <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" />
+    </Window.Resources>
 
     <!--Подключил стили-->
     <Window.Styles>
@@ -46,10 +52,10 @@
             <Grid.Transitions>
                 <Transitions>
                     <DoubleTransition Property="Opacity"
-                                      Duration="0:0:1"/>
+                                      Duration="0:0:1" />
                 </Transitions>
             </Grid.Transitions>
-            
+
             <!--Верхняя панелька-->
             <Border Classes="Tile"
                     ClipToBounds="True"
@@ -134,7 +140,7 @@
             <Grid Grid.Row="1"
                   ColumnSpacing="10"
                   ColumnDefinitions="Auto *">
-                
+
                 <!--Openable Border-->
                 <Border Grid.Column="0"
                         Classes="Tile"
@@ -210,9 +216,9 @@
                                              ClipToBounds="True"
                                              Map="{Binding Map}"
                                              IsVisible="{Binding IsMapVisible}">
-                        
+
                         </avalonia:MapControl>
-                            
+
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom"
                                     Orientation="Horizontal">
@@ -353,7 +359,7 @@
                                                 <TextBlock Text="Отмена"
                                                            Foreground="White"
                                                            FontWeight="Bold"
-                                                           FontSize="18"/>
+                                                           FontSize="18" />
 
                                             </StackPanel>
 
@@ -417,65 +423,59 @@
                                         </Transitions>
                                     </Grid.Transitions>
 
-                                    <ItemsControl Grid.Row="0"
-                                                  ItemsSource="{Binding FilteredImages}">
+                                    <ScrollViewer Grid.Row="0">
+                                        <ItemsControl ItemsSource="{Binding Images}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
 
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button
+                                                        Command="{Binding $parent[Window].DataContext.SelectIconCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="5">
+                                                        <Border BorderThickness="2"
+                                                                CornerRadius="10"
+                                                                BorderBrush="{Binding IsSelected, Converter={StaticResource BoolToBrushConverter}}">
+                                                            <Image Source="{Binding Image}"
+                                                                   Width="64"
+                                                                   Height="64"/>
+                                                        </Border>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
 
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Margin="8"
-                                                        BorderBrush="LightGray"
-                                                        BorderThickness="1"
-                                                        CornerRadius="4">
-                                                    <Image Source="{Binding}"
-                                                           Width="90"
-                                                           Height="90"
-                                                           Stretch="Uniform" />
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-
-                                    </ItemsControl>
-                                    
                                     <Grid Grid.Row="1"
                                           ColumnDefinitions="* * *">
-                                        
-                                    <Button Grid.Row="0"
-                                            Command="{Binding RightPageCommand}"
-                                            HorizontalAlignment="Right" />
-                                    
-                                    <Button Classes="ControlButton"
-                                            Grid.Column="1"
-                                            Command="{Binding AddMarkerFromPendingCommand}">
 
-                                        <Border Classes="Tile">
+                                        <Button Classes="ControlButton"
+                                                Grid.Column="1"
+                                                Command="{Binding AddMarkerFromPendingCommand}">
 
-                                            <StackPanel Classes="StackButtonControl">
+                                            <Border Classes="Tile">
 
-                                                <Image Source="/Assets/plus.png"
-                                                       Height="20"
-                                                       Width="20" />
+                                                <StackPanel Classes="StackButtonControl">
 
-                                                <TextBlock Text="Добавить"
-                                                           Foreground="White"
-                                                           FontWeight="Bold"
-                                                           FontSize="18" />
+                                                    <Image Source="/Assets/plus.png"
+                                                           Height="20"
+                                                           Width="20" />
 
-                                            </StackPanel>
+                                                    <TextBlock Text="Добавить"
+                                                               Foreground="White"
+                                                               FontWeight="Bold"
+                                                               FontSize="18" />
 
-                                        </Border>
+                                                </StackPanel>
 
-                                    </Button>
+                                            </Border>
 
-                                    <Button Grid.Row="2"
-                                            Command="{Binding LeftPageCommand}"
-                                            HorizontalAlignment="Left" />
-                                        
+                                        </Button>
+
                                     </Grid>
 
 

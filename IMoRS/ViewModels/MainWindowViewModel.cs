@@ -24,6 +24,10 @@ using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.Tiling;
 using Mapsui.UI.Avalonia;
+using Mapsui.Rendering.Skia;
+using Mapsui.Styles;
+using Mapsui.UI;
+using Avalonia.Platform;
 
 namespace IMoRS.ViewModels;
 
@@ -53,11 +57,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private MarkerDto? selectedMarker;
 
-    [ObservableProperty] private Bitmap userImage;
-
-    [ObservableProperty] private ObservableCollection<Bitmap> _filteredImages = new();
-
-    [ObservableProperty] private int page;
+    [ObservableProperty] private Bitmap? userImage;
 
     [ObservableProperty] private double iconsOpacity = 0;
 
@@ -67,11 +67,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private string _statusMessage = string.Empty;
 
+    [ObservableProperty] private Bitmap? selectedIcon;
+
+    [ObservableProperty] private string? selectedIconPath;
+
+    [ObservableProperty] private SignItem? selectedSign;
+
+    [ObservableProperty] private ObservableCollection<SignItem> _filteredImages = new();
+    public ObservableCollection<SignItem> Images { get; set; }
+    
     private const int PageSize = 50;
 
     private readonly MarkerService _markerService = new();
-
-    private readonly MarkerService _database = new();
 
     private readonly List<IFeature> _markers = [];
 
@@ -81,25 +88,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public bool HasPendingMarker => _pendingMarkerX.HasValue && _pendingMarkerY.HasValue;
 
-    public ObservableCollection<Bitmap> Images { get; } = new();
 
     public int TotalPages => Images.Count == 0 ? 1 : (int)Math.Ceiling(Images.Count / (double)PageSize);
-    public string PageInfo => $"{Page + 1} / {TotalPages}";
-
-    partial void OnPageChanged(int value)
-    {
-        if (value < 0) value = 0;
-        if (Images.Count > 0 && value >= TotalPages) value = TotalPages - 1;
-        if (Images.Count == 0) value = 0;
-
-        Page = value;
-        UpdatePage();
-    }
 
     private readonly Dictionary<string, int> _bitmapIds = new();
 
     public MainWindowViewModel()
     {
+        Images = new ObservableCollection<SignItem>();
+        
         AppOpacity = 0;
         IconsOpacity = 0;
         CreateMap();
@@ -117,56 +114,35 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void LoadImages()
     {
-        var images = LoadAllImagesFromAssets("Assets/SignIconPng");
+        Images.Clear();
 
-        foreach (var img in images)
+        foreach (var item in LoadAllImagesFromAssets("Assets/SignIconPng"))
         {
-            Images.Add(img);
+            Images.Add(item);
         }
-
-        UpdatePage();
+        
+        FilteredImages = new ObservableCollection<SignItem>(Images);
     }
 
-    private void UpdatePage()
+    private List<SignItem> LoadAllImagesFromAssets(string assetsFolderPath)
     {
-        if (Images == null)
-        {
-            FilteredImages = new ObservableCollection<Bitmap>();
-            return;
-        }
+        var items = new List<SignItem>();
 
-        var pageItems = Images
-            .Skip(Page * PageSize)
-            .Take(PageSize)
-            .ToList();
-
-        FilteredImages = new ObservableCollection<Bitmap>(pageItems);
-    }
-
-    private List<Bitmap> LoadAllImagesFromAssets(string assetsFolderPath)
-    {
-        var bitmaps = new List<Bitmap>();
         var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-        var folderUri = new Uri($"avares://{assemblyName}/{assetsFolderPath.TrimStart('/')}");
-        var assetUris = AssetLoader.GetAssets(folderUri, null);
+        var folderUri = new Uri($"avares://{assemblyName}/{assetsFolderPath}");
 
-        Console.WriteLine(assetUris.Count());
-        foreach (var assetUri in assetUris)
+        foreach (var assetUri in AssetLoader.GetAssets(folderUri, null))
         {
-            try
+            using var stream = AssetLoader.Open(assetUri);
+
+            items.Add(new SignItem
             {
-                using (var assetStream = AssetLoader.Open(assetUri))
-                {
-                    bitmaps.Add(new Bitmap(assetStream));
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка загрузки {assetUri}: {ex.Message}");
-            }
+                Image = new Bitmap(stream),
+                Path = assetUri.ToString()
+            });
         }
 
-        return bitmaps;
+        return items;
     }
 
     private readonly MemoryLayer _markerLayer = new()
@@ -182,27 +158,22 @@ public partial class MainWindowViewModel : ViewModelBase
         map.Layers.Add(OpenStreetMap.CreateTileLayer());
 
         _markerLayer.Name = "Markers";
+        _markerLayer.Features = new List<IFeature>();
 
         foreach (var marker in _markerService.GetAll())
         {
-            if (string.IsNullOrEmpty(marker.IconPath))
+            // Конвертируем путь если это avares
+            var iconPath = marker.IconPath;
+            if (iconPath.StartsWith("avares://"))
             {
-                var feature = new PointFeature(
-                    SphericalMercator.FromLonLat(marker.X, marker.Y));
-
-                feature.Styles.Add(new SymbolStyle());
-
-                _markers.Add(feature);
-            
+                // Если путь из ресурсов, сохраняем во временную папку
+                iconPath = SaveIconToTemp(iconPath);
+                marker.IconPath = iconPath; // Обновляем в DTO
             }
-            else
+        
+            if (!File.Exists(iconPath))
             {
-                
-            if (!File.Exists(marker.IconPath))
-            {
-                Console.WriteLine(marker.IconPath);
-
-
+                Console.WriteLine($"Warning: Icon file not found: {iconPath}");
                 continue;
             }
 
@@ -213,32 +184,20 @@ public partial class MainWindowViewModel : ViewModelBase
 
             feature.Styles.Add(new ImageStyle
             {
-                Image = "avares://IMoRS/Assets/SignIconPng/sign_6.png",
+                Image = $"file://{iconPath}",
                 SymbolScale = 0.5
             });
 
             _markers.Add(feature);
-            }
-
+            Console.WriteLine($"Added marker: {marker.X}, {marker.Y}");
         }
 
         _markerLayer.Features = _markers;
-
         map.Layers.Add(_markerLayer);
-
-        var state = MapStateService.Load();
-
-        // if (state != null)
-        // {
-        //     map.Navigator.CenterOn(state.X, state.Y);
-        //     map.Navigator.ZoomTo(state.Resolution);
-        // }
-        // else
-        // {
+        
         var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
         map.Navigator.CenterOn(centerX, centerY);
         map.Navigator.ZoomTo(12);
-        // }
 
         Map = map;
         Map.Navigator.ViewportChanged += OnViewportChanged;
@@ -269,7 +228,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         foreach (var feature in _markerLayer.Features)
         {
-            var style = feature.Styles.OfType<ImageStyle>().FirstOrDefault();
+            var style = feature.Styles.OfType<SymbolStyle>().FirstOrDefault();
+
             if (style != null)
             {
                 style.SymbolScale = scale;
@@ -278,22 +238,91 @@ public partial class MainWindowViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(Map));
     }
-
-
-    public void AddMarker(double x, double y)
+    
+    private string SaveIconToTemp(string avaresPath)
     {
-        var feature = new PointFeature(
-            SphericalMercator.FromLonLat(x, y));
+        try
+        {
+            var fileName = Path.GetFileName(avaresPath);
+            var tempPath = Path.Combine(Path.GetTempPath(), "IMoRS", fileName);
+        
+            Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+        
+            if (File.Exists(tempPath))
+                return tempPath;
+        
+            using var stream = AssetLoader.Open(new Uri(avaresPath));
+            using var fileStream = File.Create(tempPath);
+            stream.CopyTo(fileStream);
+        
+            Console.WriteLine($"Saved icon to: {tempPath}");
+            return tempPath;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving icon: {ex.Message}");
+            return avaresPath;
+        }
+    }
 
-        feature.Styles.Add(new SymbolStyle());
-
+    private void AddMarker(double x, double y, string iconPath)
+    {
+        Console.WriteLine($"=== ADD MARKER START ===");
+        Console.WriteLine($"Coordinates (Lon/Lat): {x}, {y}");
+        Console.WriteLine($"Icon path: {iconPath}");
+    
+        // Сохраняем иконку в temp и получаем физический путь
+        var physicalPath = SaveIconToTemp(iconPath);
+        Console.WriteLine($"Physical path: {physicalPath}");
+        Console.WriteLine($"Icon exists: {File.Exists(physicalPath)}");
+    
+        if (_markerLayer == null || Map == null)
+            return;
+    
+        _markerService.Add(x, y, physicalPath);
+        Console.WriteLine("Marker saved to database");
+    
+        var (mercatorX, mercatorY) = SphericalMercator.FromLonLat(x, y);
+        Console.WriteLine($"Mercator coordinates: {mercatorX}, {mercatorY}");
+    
+        var feature = new PointFeature(mercatorX, mercatorY);
+    
+        var markerDto = new MarkerDto
+        {
+            X = x,
+            Y = y,
+            IconPath = physicalPath,
+            ImagePath = physicalPath
+        };
+        feature["Marker"] = markerDto;
+    
+        var imageStyle = new ImageStyle
+        {
+            Image = $"file://{physicalPath}",
+            SymbolScale = 0.5,
+            Opacity = 1,
+            Enabled = true,
+        };
+        
+        feature.Styles.Add(imageStyle);
+        Console.WriteLine("Style added to feature");
+    
         _markers.Add(feature);
-
-        _markerLayer.Features = _markers;
-
-        _markerService.Add(x, y);
-
-        Map?.Refresh();
+        Console.WriteLine($"Total markers in collection: {_markers.Count}");
+    
+        _markerLayer.Features = new List<IFeature>(_markers);
+        Console.WriteLine($"Layer features in Map: {_markerLayer.Features.Count()}");
+        Console.WriteLine($"First feature: {_markerLayer.Features.FirstOrDefault()?.GetType()}");
+        Console.WriteLine($"Layer features count: {_markerLayer.Features.Count()}");
+    
+        _markerLayer.Enabled = true;
+        
+        _markerLayer.DataHasChanged();
+        Console.WriteLine("DataHasChanged called");
+    
+        Map.Refresh();
+        Console.WriteLine("Map refreshed");
+        Console.WriteLine($"=== ADD MARKER END ===");
     }
 
     public void ClearPendingMarker()
@@ -308,31 +337,38 @@ public partial class MainWindowViewModel : ViewModelBase
         _pendingMarkerY = y;
         StatusMessage = "Кликните по карте для выбора места";
         IsAddingMarker = true;
+        Console.WriteLine($"SetPendingMarker called: {x}, {y}"); // Добавьте это
     }
-
+    
     [RelayCommand]
     private void AddMarkerFromPending()
     {
+        Console.WriteLine("=== AddMarkerFromPending START ===");
+    
+        CloseList();
+    
         if (!_pendingMarkerX.HasValue || !_pendingMarkerY.HasValue)
         {
+            Console.WriteLine("No pending marker coordinates");
             return;
         }
-
-        AddMarker(_pendingMarkerX.Value, _pendingMarkerY.Value);
+    
+        if (SelectedSign == null)
+        {
+            Console.WriteLine("No sign selected");
+            return;
+        }
+    
+        Console.WriteLine($"Selected sign path: {SelectedSign.Path}");
+        Console.WriteLine($"Pending coords: {_pendingMarkerX.Value}, {_pendingMarkerY.Value}");
+    
+        AddMarker(
+            _pendingMarkerX.Value,
+            _pendingMarkerY.Value,
+            SelectedSign.Path);
 
         ClearPendingMarker();
-    }
-
-    [RelayCommand]
-    private void RightPage()
-    {
-        Page += 1;
-    }
-
-    [RelayCommand]
-    private void LeftPage()
-    {
-        Page -= 1;
+        Console.WriteLine("=== AddMarkerFromPending END ===");
     }
 
     [RelayCommand]
@@ -368,10 +404,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public void OpenPanel1()
     {
         PanelWidth1 = App.MainWindow!.Bounds.Width * 0.25;
-        if (selectedMarker == null)
+        if (SelectedMarker == null)
             return;
 
-        UserImage = new Bitmap(selectedMarker.ImagePath);
+        UserImage = new Bitmap(SelectedMarker.ImagePath);
     }
 
     [RelayCommand]
@@ -411,7 +447,6 @@ public partial class MainWindowViewModel : ViewModelBase
         IconsOpacity = 1;
 
         IsAddingMarker = false;
-        ClearPendingMarker();
         StatusMessage = string.Empty;
     }
 
@@ -455,10 +490,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var photoPath = files[0].Path.LocalPath;
 
-            selectedMarker.ImagePath = photoPath;
-            _markerService.UpdateApp(selectedMarker);
+            SelectedMarker.ImagePath = photoPath;
+            _markerService.UpdateApp(SelectedMarker);
 
             UserImage = new Bitmap(photoPath);
+        }
+    }
+
+    [RelayCommand]
+    private void SelectIcon(SignItem item)
+    {
+        if (item == null) return;
+        SelectedSign = item;
+        // Дополнительно можно подсветить выбранный элемент
+        foreach (var img in Images)
+        {
+            img.IsSelected = img == item;
         }
     }
 }

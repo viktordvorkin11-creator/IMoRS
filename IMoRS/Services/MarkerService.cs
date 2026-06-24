@@ -2,34 +2,38 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using IMoRS.Data;
 using IMoRS.Data.Entities;
 using IMoRS.DTOs;
+using Mapsui.Layers;
+using Mapsui.Projections;
+using Mapsui.Styles;
 
 namespace IMoRS.Services;
 
 public class MarkerService
 {
-    public void Add(double x, double y)
+    public void Add(double x, double y, string iconPath)
     {
-        using var context = new AppDbContext();
-    
+        using var db = new AppDbContext();
+
         var marker = new MarkerEntity
         {
             X = x,
             Y = y,
-            ImagePath = ImageService.GetImagePath("sign_6.png") // Добавьте путь по умолчанию
+            IconPath = iconPath,
+            ImagePath = iconPath
         };
-    
-        context.Markers.Add(marker);
-        context.SaveChanges();
-    }
 
+        db.Markers.Add(marker);
+        db.SaveChanges();
+    }
+    
     public List<MarkerDto> GetAll()
     {
         using var db = new AppDbContext();
 
-        Console.WriteLine($"Найдено меток в БД: {db.Markers.Count()}");
         return db.Markers
             .Select(m => new MarkerDto
             {
@@ -40,9 +44,8 @@ public class MarkerService
                 IconPath = m.IconPath
             })
             .ToList();
-        
     }
-    
+
     public void UpdateApp(MarkerDto dto)
     {
         using var db = new AppDbContext();
@@ -58,5 +61,5 @@ public class MarkerService
         entity.IconPath = dto.IconPath;
 
         db.SaveChanges();
-    } 
+    }
 }

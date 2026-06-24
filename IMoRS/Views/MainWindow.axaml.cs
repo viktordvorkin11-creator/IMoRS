@@ -32,8 +32,6 @@ public partial class MainWindow : Window
         mapControl.Info += MapControlInfo;
         mapControl.PointerPressed += OnMapPointerPressed;
         mapControl.PointerReleased += OnMapPointerReleased;
-
-        var test = ImageService.GetImagePath("sign_6.png"); 
     }
     
     private void OnMapPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -138,7 +136,12 @@ public partial class MainWindow : Window
         if (e.WorldPosition != null)
         {
             var (lon, lat) = SphericalMercator.ToLonLat(e.WorldPosition.X, e.WorldPosition.Y);
-            vm.SetPendingMarker(lon, lat);
+            vm.SetPendingMarker(lon, lat);  // <-- ЭТОТ МЕТОД ДОЛЖЕН ВЫЗЫВАТЬСЯ
+            Console.WriteLine($"Pending marker set: {lon}, {lat}");
+        }
+        else
+        {
+            Console.WriteLine("WorldPosition is NULL");
         }
     }
 
@@ -149,6 +152,4 @@ public partial class MainWindow : Window
             vm.CloseListCommand.Execute(null);
         }
     }
-    
-    
 }
