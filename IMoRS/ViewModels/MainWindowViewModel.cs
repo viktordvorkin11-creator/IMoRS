@@ -83,6 +83,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private double editPartsOpacity = 0;
 
+    [ObservableProperty] private string? customMarkerImagePath;
+
     public ObservableCollection<SignItem> Images { get; set; }
 
     private const int PageSize = 50;
@@ -125,9 +127,34 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         Images.Clear();
 
+        // Стандартные иконки из Assets
         foreach (var item in LoadAllImagesFromAssets("Assets/SignIconPng"))
         {
             Images.Add(item);
+        }
+
+        // Пользовательские иконки
+        var iconsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "IMoRS",
+            "Icons");
+
+        Directory.CreateDirectory(iconsDir);
+
+        foreach (var file in Directory.GetFiles(iconsDir))
+        {
+            try
+            {
+                Images.Add(new SignItem
+                {
+                    Image = new Bitmap(file),
+                    Path = file
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка загрузки {file}: {ex.Message}");
+            }
         }
 
         FilteredImages = new ObservableCollection<SignItem>(Images);
@@ -172,16 +199,18 @@ public partial class MainWindowViewModel : ViewModelBase
         foreach (var marker in _markerService.GetAll())
         {
             var iconPath = marker.IconPath;
+
+            if (string.IsNullOrEmpty(iconPath))
+                continue;
+
             if (iconPath.StartsWith("avares://"))
             {
                 iconPath = SaveIconToTemp(iconPath);
-                marker.IconPath = iconPath; 
+                marker.IconPath = iconPath;
             }
 
             if (!File.Exists(iconPath))
-            {
                 continue;
-            }
 
             var feature = new PointFeature(
                 SphericalMercator.FromLonLat(marker.X, marker.Y));
@@ -190,7 +219,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             feature.Styles.Add(new ImageStyle
             {
-                Image = $"file://{marker.ImagePath}",
+                Image = $"file:///{iconPath.Replace("\\", "/")}",
                 SymbolScale = 0.2
             });
 
@@ -200,58 +229,34 @@ public partial class MainWindowViewModel : ViewModelBase
         _markerLayer.Features = _markers;
         map.Layers.Add(_markerLayer);
 
-        var state = MapStateService.Load();
-
-        if (state != null && state.X > 0 && state.Y > 0)
-        {
-            map.Navigator.CenterOn(state.X, state.Y);
-            map.Navigator.ZoomTo(state.Resolution > 0 ? state.Resolution : 12);
-        }
-        else
-        {
-            var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
-            map.Navigator.CenterOn(centerX, centerY);
-            map.Navigator.ZoomTo(12);
-        }
-
         Map = map;
-        Map.Navigator.ViewportChanged += OnViewportChanged;
     }
-    
+
     private void UpdateMarkerOnMap(MarkerDto marker)
     {
-        if (_markerLayer == null || Map == null)
-            return;
-
-        // Находим существующий feature для этого маркера
         var feature = _markers.FirstOrDefault(f =>
         {
             if (f["Marker"] is MarkerDto dto)
                 return dto.Id == marker.Id;
+
             return false;
         });
 
         if (feature == null)
             return;
 
-        // Удаляем старые стили
         feature.Styles.Clear();
 
-        // Создаем новый стиль с обновленным изображением
-        var imageStyle = new ImageStyle
+        feature.Styles.Add(new ImageStyle
         {
-            Image = $"file://{marker.ImagePath}",
+            Image = $"file:///{marker.IconPath!.Replace("\\", "/")}",
             SymbolScale = 0.2,
             Opacity = 1,
-            Enabled = true,
-        };
+            Enabled = true
+        });
 
-        feature.Styles.Add(imageStyle);
-    
-        // Обновляем данные в feature
         feature["Marker"] = marker;
 
-        // Обновляем слой
         _markerLayer.DataHasChanged();
         Map.Refresh();
     }
@@ -323,30 +328,126 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             X = x,
             Y = y,
-            IconPath = physicalPath,
-            ImagePath = physicalPath
+            IconPath = physicalPath
         };
+
         feature["Marker"] = markerDto;
 
-        var imageStyle = new ImageStyle
+        feature.Styles.Add(new ImageStyle
         {
-            Image = $"file://{markerDto.ImagePath}",
+            Image = $"file:///{physicalPath.Replace("\\", "/")}",
             SymbolScale = 0.2,
             Opacity = 1,
-            Enabled = true,
-        };
-
-        feature.Styles.Add(imageStyle);
+            Enabled = true
+        });
 
         _markers.Add(feature);
 
         _markerLayer.Features = new List<IFeature>(_markers);
 
-        _markerLayer.Enabled = true;
-
         _markerLayer.DataHasChanged();
-
         Map.Refresh();
+    }
+
+    public async Task EditIcon()
+    {
+        if (App.MainWindow != null)
+        {
+            var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions
+                {
+                    Title = "Выберите изображение",
+                    AllowMultiple = false,
+                    FileTypeFilter =
+                    [
+                        new FilePickerFileType("Изображения")
+                        {
+                            Patterns = ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif"]
+                        }
+                    ],
+                });
+
+            if (files.Count == 0)
+                return;
+
+            var photoPath = files[0].Path.LocalPath;
+            
+            var sign = new SignItem
+            {
+                Image = new Bitmap(photoPath),
+                Path = photoPath
+            };
+
+            Images.Add(sign);
+            FilteredImages.Add(sign);
+
+            SelectedMarker.IconPath = photoPath;
+            _markerService.UpdateApp(SelectedMarker);
+
+            UpdateMarkerOnMap(SelectedMarker);
+
+            UserImage = new Bitmap(photoPath);
+            
+            var iconsDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "IMoRS",
+                "Icons");
+
+            Directory.CreateDirectory(iconsDir);
+
+            var fileName = Guid.NewGuid() + Path.GetExtension(photoPath);
+            var savedPath = Path.Combine(iconsDir, fileName);
+
+            File.Copy(photoPath, savedPath, true);
+
+            CloseList();
+        }
+    }
+
+    private async Task AddIcon()
+    {
+        if (App.MainWindow == null)
+            return;
+
+        var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Выберите изображение для метки",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Изображения")
+                    {
+                        Patterns = ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif"]
+                    }
+                ]
+            });
+
+        if (files.Count == 0)
+            return;
+
+        CustomMarkerImagePath = files[0].Path.LocalPath;
+        
+        var sign = new SignItem
+        {
+            Image = new Bitmap(CustomMarkerImagePath),
+            Path = CustomMarkerImagePath
+        };
+
+        Images.Add(sign);
+        FilteredImages.Add(sign);
+
+        var iconsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "IMoRS",
+            "Icons");
+
+        Directory.CreateDirectory(iconsDir);
+
+        var fileName = Guid.NewGuid() + Path.GetExtension(CustomMarkerImagePath);
+        var savedPath = Path.Combine(iconsDir, fileName);
+
+        File.Copy(CustomMarkerImagePath, savedPath, true);
     }
 
     public void ClearPendingMarker()
@@ -361,16 +462,40 @@ public partial class MainWindowViewModel : ViewModelBase
         _pendingMarkerY = y;
         IsAddingMarker = true;
     }
+    
+    private Bitmap LoadBitmap(string path)
+    {
+        if (path.StartsWith("avares://"))
+        {
+            using var stream = AssetLoader.Open(new Uri(path));
+            return new Bitmap(stream);
+        }
+
+        return new Bitmap(path);
+    }
 
     [RelayCommand]
     private void AddMarkerFromPending()
     {
         CloseList();
 
+        string iconPath;
+
+        if (!string.IsNullOrEmpty(CustomMarkerImagePath))
+        {
+            iconPath = CustomMarkerImagePath;
+        }
+        else
+        {
+            iconPath = SelectedSign.Path;
+        }
+
         AddMarker(
             _pendingMarkerX.Value,
             _pendingMarkerY.Value,
-            SelectedSign.Path);
+            iconPath);
+
+        CustomMarkerImagePath = null;
 
         ClearPendingMarker();
     }
@@ -411,9 +536,9 @@ public partial class MainWindowViewModel : ViewModelBase
         if (SelectedMarker == null)
             return;
 
-        if (!string.IsNullOrEmpty(SelectedMarker.ImagePath) && File.Exists(SelectedMarker.ImagePath))
+        if (!string.IsNullOrEmpty(SelectedMarker.IconPath) && File.Exists(SelectedMarker.IconPath))
         {
-            UserImage = new Bitmap(SelectedMarker.ImagePath);
+            UserImage = new Bitmap(SelectedMarker.IconPath);
         }
         else
         {
@@ -459,7 +584,19 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     public async Task OpenList()
     {
-        ClosePanel1();
+        if (!IsEditing)
+        {
+            ClosePanel1();
+        }
+        else
+        {
+            if (!IsPanel1Open)
+                return;
+            PanelWidth1 = 30;
+            ImDescOpacity = 0;
+            await Task.Delay(175);
+            IsPanel1Open = false;
+        }
         ClosePanel2();
         OverlayOpacity = 0.67;
         BorderListHeight = App.MainWindow!.Bounds.Height * 0.7;
@@ -487,102 +624,38 @@ public partial class MainWindowViewModel : ViewModelBase
         await Task.Delay(200);
         BorderListWidth = 25;
         IconsOpacity = 0;
+        if (IsEditing)
+            OpenPanel1();
     }
 
     [RelayCommand]
-public async Task AddImage()
-{
-    if (App.MainWindow != null)
+    private void AddOrEditIcon()
     {
-        // Получаем путь к папке Assets/SignIconPng
-        var defaultFolder = GetAssetsFolderPath();
-        
-        var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(
-            new FilePickerOpenOptions
-            {
-                Title = "Выберите изображение",
-                AllowMultiple = false,
-                FileTypeFilter =
-                [
-                    new FilePickerFileType("Изображения")
-                    {
-                        Patterns = ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif"]
-                    }
-                ],
-                // Устанавливаем начальную папку
-                SuggestedStartLocation = await App.MainWindow.StorageProvider.TryGetFolderFromPathAsync(defaultFolder)
-            });
-            
-        if (files.Count == 0)
-            return;
-
-        var photoPath = files[0].Path.LocalPath;
-
-        SelectedMarker.ImagePath = photoPath;
-        _markerService.UpdateApp(SelectedMarker);
-
-        UpdateMarkerOnMap(SelectedMarker);
-
-        UserImage = new Bitmap(photoPath);
-    }
-}
-
-private string GetAssetsFolderPath()
-{
-    try
-    {
-        // Получаем путь к папке Assets в проекте
-        var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-        var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-        var directory = Path.GetDirectoryName(assemblyLocation);
-        
-        // Вариант 1: Если сборка в папке bin/Debug или bin/Release
-        var projectPath = Directory.GetParent(directory)?.Parent?.Parent?.Parent?.FullName;
-        if (projectPath != null)
+        if (IsEditing)
         {
-            var assetsPath = Path.Combine(projectPath, "Assets", "SignIconPng");
-            if (Directory.Exists(assetsPath))
-                return assetsPath;
+            EditIcon();
         }
-        
-        // Вариант 2: Если сборка в папке с проектом
-        var currentDir = Directory.GetCurrentDirectory();
-        var possiblePath = Path.Combine(currentDir, "Assets", "SignIconPng");
-        if (Directory.Exists(possiblePath))
-            return possiblePath;
-        
-        // Вариант 3: Поиск вверх по дереву папок
-        var dir = new DirectoryInfo(currentDir);
-        while (dir != null)
+        else
         {
-            var testPath = Path.Combine(dir.FullName, "Assets", "SignIconPng");
-            if (Directory.Exists(testPath))
-                return testPath;
-            dir = dir.Parent;
+            AddIcon();
         }
-        
-        // Если ничего не найдено, возвращаем папку "Изображения" пользователя
-        return Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
     }
-    catch
-    {
-        // В случае ошибки возвращаем папку "Изображения" пользователя
-        return Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-    }
-}
 
     [RelayCommand]
     private void SelectIcon(SignItem item)
     {
         if (item == null) return;
+
+        CustomMarkerImagePath = null;
+
         SelectedSign = item;
-        // Дополнительно можно подсветить выбранный элемент
+
         foreach (var img in Images)
         {
             img.IsSelected = img == item;
         }
     }
-    
+
     [RelayCommand]
     private void DeleteMarker()
     {
@@ -612,5 +685,27 @@ private string GetAssetsFolderPath()
     {
         IsEditing = true;
         EditPartsOpacity = 1;
+    }
+    
+    [RelayCommand]
+    private void ApplySelectedIcon()
+    {
+        if (SelectedMarker == null || SelectedSign == null)
+            return;
+
+        var path = SelectedSign.Path;
+
+        if (path.StartsWith("avares://"))
+        {
+            path = SaveIconToTemp(path);
+        }
+
+        SelectedMarker.IconPath = path;
+
+        _markerService.UpdateApp(SelectedMarker);
+
+        UpdateMarkerOnMap(SelectedMarker);
+
+        CloseList();
     }
 }

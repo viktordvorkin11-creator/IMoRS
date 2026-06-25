@@ -187,7 +187,7 @@
                                 <Button IsVisible="{Binding IsEditing}"
                                         Opacity="{Binding EditPartsOpacity}"
                                         Classes="SideButton EditIconButton"
-                                        Command="{Binding AddImage}">
+                                        Command="{Binding OpenListCommand}">
 
                                     <Border Classes="Tile">
 
@@ -504,6 +504,7 @@
 
                                             <Button Grid.Column="0" Classes="ControlButton GradientButton SideButton"
                                                     Command="{Binding AddMarkerFromPendingCommand}"
+                                                    IsVisible="{Binding !IsEditing}"
                                                     HorizontalAlignment="Left">
 
                                                 <StackPanel Classes="StackButtonControl">
@@ -513,6 +514,26 @@
                                                            Width="20" />
 
                                                     <TextBlock Text="Добавить"
+                                                               Foreground="White"
+                                                               FontWeight="Bold"
+                                                               FontSize="18" />
+
+                                                </StackPanel>
+
+                                            </Button>
+                                            
+                                            <Button Grid.Column="0" Classes="ControlButton GradientButton SideButton"
+                                                    Command="{Binding ApplySelectedIconCommand}"
+                                                    IsVisible="{Binding IsEditing}"
+                                                    HorizontalAlignment="Left">
+
+                                                <StackPanel Classes="StackButtonControl">
+
+                                                    <Image Source="/Assets/ConfirmIcon.png"
+                                                           Height="20"
+                                                           Width="20" />
+
+                                                    <TextBlock Text="Применить"
                                                                Foreground="White"
                                                                FontWeight="Bold"
                                                                FontSize="18" />
@@ -541,7 +562,7 @@
                                             </Button>
 
                                             <Button Grid.Column="2" Classes="ControlButton SideButton GradientButton"
-                                                    Command="{Binding AddImageCommand}"
+                                                    Command="{Binding AddOrEditIconCommand}"
                                                     HorizontalAlignment="Right">
 
                                                 <StackPanel Classes="StackButtonControl">
@@ -569,12 +590,12 @@
                             </Grid>
 
                         </Border>
-                        
+
                         <Border CornerRadius="10"
                                 Margin="-2"
                                 BorderBrush="#FF5500AA"
                                 BorderThickness="6">
-                            
+
                             <Border VerticalAlignment="Top"
                                     HorizontalAlignment="Right"
                                     Classes="Tile"
@@ -594,7 +615,7 @@
                             </Border>
 
                         </Border>
-                        
+
                     </Grid>
 
                 </Border>
