@@ -37,4 +37,10 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\ConfirmDelete.axaml.cs">
+        <DependentUpon>ConfirmDelete.axaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

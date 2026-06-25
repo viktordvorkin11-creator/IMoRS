@@ -233,20 +233,20 @@
         </Style>
     </Style>
     <Style Selector="Button.GradientButton">
-        <Setter Property="Background" Value="#FF6F1899" />
+        <Setter Property="Background" Value="#FF4F1899" />
         <Style Selector="^:pointerover /template/ContentPresenter">
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
-                    <GradientStop Color="#FFB71CFF" Offset="0" />
-                    <GradientStop Color="#FF6F1899" Offset="1" />
+                    <GradientStop Color="#FFA71DFF" Offset="0" />
+                    <GradientStop Color="#FF4F1899" Offset="1" />
                 </LinearGradientBrush>
             </Setter>
         </Style>
         <Style Selector="^:pressed /template/ContentPresenter">
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
-                    <GradientStop Color="#FFA71DFF" Offset="0" />
-                    <GradientStop Color="#FF4F1899" Offset="1" />
+                    <GradientStop Color="#FFB71CFF" Offset="0" />
+                    <GradientStop Color="#FF6F1899" Offset="1" />
                 </LinearGradientBrush>
             </Setter>
         </Style>
@@ -259,23 +259,41 @@
             </Setter>
         </Style>
     </Style>
-    <Style Selector="TextBox.Desc">
-        <Style Selector="^:pointerover /template/Border#border">
-            <Setter Property="Opacity" Value="0" />
-        </Style>
-    </Style>
     <Style Selector="Border.ConfirmDeleteDialog">
 
     </Style>
     <Style Selector="Border.GradientBorderBrush">
         <Setter Property="BorderBrush">
             <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
-                <GradientStop Color="#FFFF1899" Offset="0" />
-                <GradientStop Color="#FFB93CFF" Offset="0.25" />
-                <GradientStop Color="#FFB71CFF" Offset="0.5" />
-                <GradientStop Color="#FF6F1899" Offset="0.75" />
+                <GradientStop Color="#FFB71CFF" Offset="0" />
+                <GradientStop Color="#FF6F1899" Offset="0.5" />
                 <GradientStop Color="#FF4F1899" Offset="1" />
             </LinearGradientBrush>
         </Setter>
+    </Style>
+    <Style Selector="TextBox.DescBox">
+        <Setter Property="Background">
+            <RadialGradientBrush Center="50%,50%" RadiusX="50%" RadiusY="50%">
+                <GradientStop Color="#FFA71DFF" Offset="0" />
+                <GradientStop Color="#FF4F1899" Offset="1" />
+            </RadialGradientBrush>
+        </Setter>
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Watermark" Value="Придумайте описание..." />
+        <Setter Property="AcceptsReturn" Value="True" />
+    </Style>
+    <Style Selector="TextBlock.DescBlock">
+        <Setter Property="Background">
+            <RadialGradientBrush Center="50%,50%" RadiusX="50%" RadiusY="50%">
+                <GradientStop Color="#FFA71DFF" Offset="0" />
+                <GradientStop Color="#FF4F1899" Offset="1" />
+            </RadialGradientBrush>
+        </Setter>
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 </Styles>

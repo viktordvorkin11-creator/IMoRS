@@ -5,29 +5,20 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HarfBuzzSharp;
 using IMoRS.DTOs;
-using IMoRS.Models;
 using IMoRS.Services;
 using Mapsui;
-using Mapsui.Extensions;
 using Mapsui.Layers;
 using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.Tiling;
 using Mapsui.UI.Avalonia;
-using Mapsui.Rendering.Skia;
-using Mapsui.Styles;
-using Mapsui.UI;
-using Avalonia.Platform;
 
 namespace IMoRS.ViewModels;
 
@@ -85,6 +76,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private string? customMarkerImagePath;
 
+    [ObservableProperty] private string description = string.Empty;
+    
+    [ObservableProperty] private double buttonHeight1 = 43;
+    
+    [ObservableProperty] private double buttonHeight2 = 0;
+
     public ObservableCollection<SignItem> Images { get; set; }
 
     private const int PageSize = 50;
@@ -96,13 +93,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private double? _pendingMarkerX;
 
     private double? _pendingMarkerY;
-
-    public bool HasPendingMarker => _pendingMarkerX.HasValue && _pendingMarkerY.HasValue;
-
-
-    public int TotalPages => Images.Count == 0 ? 1 : (int)Math.Ceiling(Images.Count / (double)PageSize);
-
-    private readonly Dictionary<string, int> _bitmapIds = new();
 
     public MainWindowViewModel()
     {
@@ -127,13 +117,11 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         Images.Clear();
 
-        // Стандартные иконки из Assets
         foreach (var item in LoadAllImagesFromAssets("Assets/SignIconPng"))
         {
             Images.Add(item);
         }
 
-        // Пользовательские иконки
         var iconsDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "IMoRS",
@@ -229,6 +217,20 @@ public partial class MainWindowViewModel : ViewModelBase
         _markerLayer.Features = _markers;
         map.Layers.Add(_markerLayer);
 
+        var state = MapStateService.Load();
+
+        if (state != null && state.X > 0 && state.Y > 0)
+        {
+            map.Navigator.CenterOn(state.X, state.Y);
+            map.Navigator.ZoomTo(state.Resolution > 0 ? state.Resolution : 12);
+        }
+        else
+        {
+            var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
+            map.Navigator.CenterOn(centerX, centerY);
+            map.Navigator.ZoomTo(12);
+        }
+        
         Map = map;
     }
 
@@ -550,6 +552,7 @@ public partial class MainWindowViewModel : ViewModelBase
         await Task.Delay(300);
         ImDescOpacity = 1;
         IsPanel1Open = true;
+        Description = SelectedMarker.Description;
     }
 
     [RelayCommand]
@@ -562,6 +565,10 @@ public partial class MainWindowViewModel : ViewModelBase
         await Task.Delay(175);
         IsPanel1Open = false;
         IsEditing = false;
+        Description = string.Empty;
+        ButtonHeight1 = 43;
+        await Task.Delay(175);
+        ButtonHeight2 = 0;
     }
 
     [RelayCommand]
@@ -681,10 +688,15 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void EditMarker()
+    private async Task EditMarker()
     {
         IsEditing = true;
         EditPartsOpacity = 1;
+        
+        
+        ButtonHeight1 = 0;
+        await Task.Delay(175);
+        ButtonHeight2 = 43;
     }
     
     [RelayCommand]
@@ -707,5 +719,16 @@ public partial class MainWindowViewModel : ViewModelBase
         UpdateMarkerOnMap(SelectedMarker);
 
         CloseList();
+    }
+
+    [RelayCommand]
+    private async Task SaveDescription()
+    {
+        SelectedMarker.Description = Description;  
+        _markerService.UpdateApp(SelectedMarker);
+
+        ButtonHeight1 = 43;
+        await Task.Delay(175);
+        ButtonHeight2 = 0;
     }
 }

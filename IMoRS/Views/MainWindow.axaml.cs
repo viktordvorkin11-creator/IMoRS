@@ -124,6 +124,7 @@ public partial class MainWindow : Window
             {
                 _isMarkerClicked = true;
                 vm.SelectedMarker = marker;
+                vm.ClosePanel1Command.Execute(null);
                 vm.OpenPanel1Command.Execute(null);
                 vm.ClearPendingMarker();
                 return;
