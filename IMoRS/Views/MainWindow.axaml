@@ -12,7 +12,7 @@
         Width="1600"
         Height="900"
         CanResize="False"
-        WindowDecorations="BorderOnly"
+        WindowDecorations="None"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="50">
 
@@ -232,52 +232,55 @@
                                          Text="{Binding Description}"
                                          IsVisible="{Binding IsEditing}" />
 
-                                <StackPanel Grid.Row="1"
-                                            Orientation="Horizontal"
-                                            HorizontalAlignment="Center">
+                                <Grid Grid.Row="1"
+                                      ColumnDefinitions="* * * "
+                                      HorizontalAlignment="Stretch">
 
-                                    <Button Classes="ControlButton SideButton GradientButton"
-                                            Command="{Binding DeleteMarkerCommand}">
+                                    <Button Grid.Column="0"
+                                            Classes="ControlButton SideButton GradientButton"
+                                            Command="{Binding DeleteMarkerCommand}"
+                                            HorizontalAlignment="Center">
 
                                         <StackPanel Classes="StackButtonControl">
 
                                             <Image Source="/Assets/minus.png"
-                                                   Height="15"
-                                                   Width="15" />
+                                                   Height="20"
+                                                   Width="20" />
 
                                             <TextBlock Text="Удалить"
                                                        Foreground="White"
                                                        FontWeight="Bold"
-                                                       FontSize="15" />
+                                                       FontSize="12" />
 
                                         </StackPanel>
 
                                     </Button>
 
-                                    <Grid>
+                                    <Grid Grid.Column="1">
 
                                         <Button Classes="ControlButton SideButton GradientButton"
                                                 Command="{Binding EditMarkerCommand}"
                                                 Height="{Binding ButtonHeight1}"
-                                                VerticalAlignment="Bottom">
-                                            
+                                                VerticalAlignment="Bottom"
+                                                HorizontalAlignment="Center">
+
                                             <Button.Transitions>
                                                 <Transitions>
                                                     <DoubleTransition Property="Height"
-                                                                      Duration="0:0:0.25"/>
+                                                                      Duration="0:0:0.25" />
                                                 </Transitions>
                                             </Button.Transitions>
 
                                             <StackPanel Classes="StackButtonControl">
 
                                                 <Image Source="/Assets/editIcon.png"
-                                                       Height="15"
-                                                       Width="15" />
+                                                       Height="20"
+                                                       Width="20" />
 
                                                 <TextBlock Text="Изменить"
                                                            Foreground="White"
                                                            FontWeight="Bold"
-                                                           FontSize="15" />
+                                                           FontSize="12" />
 
                                             </StackPanel>
 
@@ -286,25 +289,26 @@
                                         <Button Classes="ControlButton SideButton GradientButton"
                                                 Command="{Binding SaveDescriptionCommand}"
                                                 Height="{Binding ButtonHeight2}"
-                                                VerticalAlignment="Top">
-                                            
+                                                VerticalAlignment="Top"
+                                                HorizontalAlignment="Center">
+
                                             <Button.Transitions>
                                                 <Transitions>
                                                     <DoubleTransition Property="Height"
-                                                                      Duration="0:0:0.25"/>
+                                                                      Duration="0:0:0.25" />
                                                 </Transitions>
                                             </Button.Transitions>
 
                                             <StackPanel Classes="StackButtonControl">
 
                                                 <Image Source="/Assets/ConfirmIcon.png"
-                                                       Height="15"
-                                                       Width="15" />
+                                                       Height="20"
+                                                       Width="20" />
 
                                                 <TextBlock Text="Применить"
                                                            Foreground="White"
                                                            FontWeight="Bold"
-                                                           FontSize="15" />
+                                                           FontSize="12" />
 
                                             </StackPanel>
 
@@ -312,8 +316,10 @@
 
                                     </Grid>
 
-                                    <Button Classes="ControlButton SideButton GradientButton"
-                                            Command="{Binding ClosePanel1Command}">
+                                    <Button Grid.Column="2"
+                                            Classes="ControlButton SideButton GradientButton"
+                                            Command="{Binding ClosePanel1Command}"
+                                            HorizontalAlignment="Center">
 
                                         <StackPanel Classes="StackButtonControl">
 
@@ -324,13 +330,13 @@
                                             <TextBlock Text="Отмена"
                                                        Foreground="White"
                                                        FontWeight="Bold"
-                                                       FontSize="15" />
+                                                       FontSize="12" />
 
                                         </StackPanel>
 
                                     </Button>
 
-                                </StackPanel>
+                                </Grid>
 
                             </Grid>
 

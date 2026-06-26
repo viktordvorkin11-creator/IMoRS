@@ -465,17 +465,6 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAddingMarker = true;
     }
     
-    private Bitmap LoadBitmap(string path)
-    {
-        if (path.StartsWith("avares://"))
-        {
-            using var stream = AssetLoader.Open(new Uri(path));
-            return new Bitmap(stream);
-        }
-
-        return new Bitmap(path);
-    }
-
     [RelayCommand]
     private void AddMarkerFromPending()
     {
@@ -521,20 +510,31 @@ public partial class MainWindowViewModel : ViewModelBase
         App.MainWindow?.WindowState = App.MainWindow?.WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
-        if (App.MainWindow?.WindowState == WindowState.Maximized)
+        if (App.MainWindow != null)
         {
-            IsMaximized = true;
-        }
-        else
-        {
-            IsMaximized = false;
+            if (App.MainWindow.WindowState == WindowState.Maximized)
+            {
+                App.MainWindow.WindowState = WindowState.Maximized;
+
+
+                IsMaximized = true;
+            }
+            else
+            {
+                App.MainWindow.WindowState = WindowState.Normal;
+                
+                App.MainWindow.Width = 1600;
+                App.MainWindow.Height = 900;
+
+                IsMaximized = false;
+            }
         }
     }
 
     [RelayCommand]
     public async Task OpenPanel1()
     {
-        PanelWidth1 = App.MainWindow!.Bounds.Width * 0.25;
+        PanelWidth1 = 400;
         if (SelectedMarker == null)
             return;
 
@@ -566,9 +566,9 @@ public partial class MainWindowViewModel : ViewModelBase
         IsPanel1Open = false;
         IsEditing = false;
         Description = string.Empty;
-        ButtonHeight1 = 43;
-        await Task.Delay(175);
         ButtonHeight2 = 0;
+        await Task.Delay(175);
+        ButtonHeight1 = 43;
     }
 
     [RelayCommand]
@@ -584,7 +584,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         IsPanel2Open = true;
 
-        PanelWidth2 = App.MainWindow!.Bounds.Width * 0.1;
+        PanelWidth2 = 160;
         ArrowAngle = 0;
     }
 
@@ -726,9 +726,10 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         SelectedMarker.Description = Description;  
         _markerService.UpdateApp(SelectedMarker);
+        IsEditing = false;
 
-        ButtonHeight1 = 43;
-        await Task.Delay(175);
         ButtonHeight2 = 0;
+        await Task.Delay(175);
+        ButtonHeight1 = 43;
     }
 }
