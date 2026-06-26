@@ -19,6 +19,7 @@ using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.Tiling;
 using Mapsui.UI.Avalonia;
+using SkiaSharp;
 
 namespace IMoRS.ViewModels;
 
@@ -77,9 +78,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private string? customMarkerImagePath;
 
     [ObservableProperty] private string description = string.Empty;
-    
+
     [ObservableProperty] private double buttonHeight1 = 43;
-    
+
     [ObservableProperty] private double buttonHeight2 = 0;
 
     public ObservableCollection<SignItem> Images { get; set; }
@@ -230,7 +231,7 @@ public partial class MainWindowViewModel : ViewModelBase
             map.Navigator.CenterOn(centerX, centerY);
             map.Navigator.ZoomTo(12);
         }
-        
+
         Map = map;
     }
 
@@ -261,32 +262,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _markerLayer.DataHasChanged();
         Map.Refresh();
-    }
-
-    private void OnViewportChanged(object? sender, EventArgs e)
-    {
-        if (_markerLayer == null) return;
-
-        var resolution = Map.Navigator.Viewport.Resolution;
-
-        double scale = 0.15;
-
-        if (resolution > 1000)
-        {
-            scale = 0;
-        }
-
-        foreach (var feature in _markerLayer.Features)
-        {
-            var style = feature.Styles.OfType<ImageStyle>().FirstOrDefault();
-
-            if (style != null)
-            {
-                style.SymbolScale = scale;
-            }
-        }
-
-        OnPropertyChanged(nameof(Map));
     }
 
     private string SaveIconToTemp(string avaresPath)
@@ -320,18 +295,11 @@ public partial class MainWindowViewModel : ViewModelBase
         if (_markerLayer == null || Map == null)
             return;
 
-        _markerService.Add(x, y, physicalPath);
-
         var (mercatorX, mercatorY) = SphericalMercator.FromLonLat(x, y);
 
         var feature = new PointFeature(mercatorX, mercatorY);
 
-        var markerDto = new MarkerDto
-        {
-            X = x,
-            Y = y,
-            IconPath = physicalPath
-        };
+        var markerDto = _markerService.Add(x, y, physicalPath);
 
         feature["Marker"] = markerDto;
 
@@ -351,7 +319,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Map.Refresh();
     }
 
-    public async Task EditIcon()
+    private async Task EditIcon()
     {
         if (App.MainWindow != null)
         {
@@ -373,7 +341,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
 
             var photoPath = files[0].Path.LocalPath;
-            
+
             var sign = new SignItem
             {
                 Image = new Bitmap(photoPath),
@@ -382,14 +350,20 @@ public partial class MainWindowViewModel : ViewModelBase
 
             Images.Add(sign);
             FilteredImages.Add(sign);
+            
+            foreach (var img in Images)
+                img.IsSelected = false;
+            
+            foreach (var img in Images)
+                img.IsSelected = false;
 
-            SelectedMarker.IconPath = photoPath;
+            SelectedMarker.IconPath = ResizeAndSaveImage(photoPath);
             _markerService.UpdateApp(SelectedMarker);
 
             UpdateMarkerOnMap(SelectedMarker);
 
             UserImage = new Bitmap(photoPath);
-            
+
             var iconsDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "IMoRS",
@@ -401,9 +375,63 @@ public partial class MainWindowViewModel : ViewModelBase
             var savedPath = Path.Combine(iconsDir, fileName);
 
             File.Copy(photoPath, savedPath, true);
-
-            CloseList();
         }
+    }
+
+    private string ResizeAndSaveImage(string sourcePath)
+    {
+        var iconsDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "IMoRS",
+            "Icons");
+
+        Directory.CreateDirectory(iconsDir);
+
+        var destinationPath = Path.Combine(
+            iconsDir,
+            $"{Guid.NewGuid()}.png");
+
+        const int maxSize = 512;
+
+        using var input = File.OpenRead(sourcePath);
+        using var codec = SKCodec.Create(input);
+
+        if (codec == null)
+            throw new Exception("Не удалось открыть изображение.");
+
+        var info = codec.Info;
+
+        float scale = Math.Min(
+            (float)maxSize / info.Width,
+            (float)maxSize / info.Height);
+
+        scale = Math.Min(scale, 1f);
+
+        int width = (int)(info.Width * scale);
+        int height = (int)(info.Height * scale);
+
+        var resizedInfo = new SKImageInfo(width, height);
+
+        using var bitmap = SKBitmap.Decode(sourcePath);
+
+        using var resizedBitmap = bitmap.Resize(
+            resizedInfo,
+            SKSamplingOptions.Default);
+
+        if (resizedBitmap == null)
+            throw new Exception("Ошибка изменения размера.");
+
+        using var image = SKImage.FromBitmap(resizedBitmap);
+
+        using var data = image.Encode(
+            SKEncodedImageFormat.Png,
+            100);
+
+        using var output = File.OpenWrite(destinationPath);
+
+        data.SaveTo(output);
+
+        return destinationPath;
     }
 
     private async Task AddIcon()
@@ -428,8 +456,8 @@ public partial class MainWindowViewModel : ViewModelBase
         if (files.Count == 0)
             return;
 
-        CustomMarkerImagePath = files[0].Path.LocalPath;
-        
+        CustomMarkerImagePath = ResizeAndSaveImage(files[0].Path.LocalPath);
+
         var sign = new SignItem
         {
             Image = new Bitmap(CustomMarkerImagePath),
@@ -438,18 +466,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Images.Add(sign);
         FilteredImages.Add(sign);
-
-        var iconsDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "IMoRS",
-            "Icons");
-
-        Directory.CreateDirectory(iconsDir);
-
-        var fileName = Guid.NewGuid() + Path.GetExtension(CustomMarkerImagePath);
-        var savedPath = Path.Combine(iconsDir, fileName);
-
-        File.Copy(CustomMarkerImagePath, savedPath, true);
+        
+        SelectIcon(sign);
     }
 
     public void ClearPendingMarker()
@@ -464,31 +482,38 @@ public partial class MainWindowViewModel : ViewModelBase
         _pendingMarkerY = y;
         IsAddingMarker = true;
     }
-    
+
     [RelayCommand]
     private void AddMarkerFromPending()
     {
-        CloseList();
-
-        string iconPath;
-
-        if (!string.IsNullOrEmpty(CustomMarkerImagePath))
+        try
         {
-            iconPath = CustomMarkerImagePath;
+            CloseList();
+
+            string iconPath;
+
+            if (!string.IsNullOrEmpty(CustomMarkerImagePath))
+            {
+                iconPath = CustomMarkerImagePath;
+            }
+            else
+            {
+                iconPath = SelectedSign.Path;
+            }
+
+            AddMarker(
+                _pendingMarkerX.Value,
+                _pendingMarkerY.Value,
+                iconPath);
+
+            CustomMarkerImagePath = null;
+
+            ClearPendingMarker();
         }
-        else
+        catch
         {
-            iconPath = SelectedSign.Path;
+            return;
         }
-
-        AddMarker(
-            _pendingMarkerX.Value,
-            _pendingMarkerY.Value,
-            iconPath);
-
-        CustomMarkerImagePath = null;
-
-        ClearPendingMarker();
     }
 
     [RelayCommand]
@@ -522,7 +547,7 @@ public partial class MainWindowViewModel : ViewModelBase
             else
             {
                 App.MainWindow.WindowState = WindowState.Normal;
-                
+
                 App.MainWindow.Width = 1600;
                 App.MainWindow.Height = 900;
 
@@ -604,6 +629,7 @@ public partial class MainWindowViewModel : ViewModelBase
             await Task.Delay(175);
             IsPanel1Open = false;
         }
+
         ClosePanel2();
         OverlayOpacity = 0.67;
         BorderListHeight = App.MainWindow!.Bounds.Height * 0.7;
@@ -666,6 +692,8 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void DeleteMarker()
     {
+        Console.WriteLine($"Selected Id = {SelectedMarker.Id}");
+
         if (SelectedMarker == null)
             return;
 
@@ -692,39 +720,46 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         IsEditing = true;
         EditPartsOpacity = 1;
-        
-        
+
+
         ButtonHeight1 = 0;
         await Task.Delay(175);
         ButtonHeight2 = 43;
     }
-    
+
     [RelayCommand]
     private void ApplySelectedIcon()
     {
-        if (SelectedMarker == null || SelectedSign == null)
-            return;
-
-        var path = SelectedSign.Path;
-
-        if (path.StartsWith("avares://"))
+        try
         {
-            path = SaveIconToTemp(path);
+            if (SelectedMarker == null || SelectedSign == null)
+                return;
+
+            var path = SelectedSign.Path;
+
+            if (path.StartsWith("avares://"))
+            {
+                path = SaveIconToTemp(path);
+            }
+
+            SelectedMarker.IconPath = path;
+
+            _markerService.UpdateApp(SelectedMarker);
+
+            UpdateMarkerOnMap(SelectedMarker);
+
+            CloseList();
         }
-
-        SelectedMarker.IconPath = path;
-
-        _markerService.UpdateApp(SelectedMarker);
-
-        UpdateMarkerOnMap(SelectedMarker);
-
-        CloseList();
+        catch
+        {
+            return;
+        }
     }
 
     [RelayCommand]
     private async Task SaveDescription()
     {
-        SelectedMarker.Description = Description;  
+        SelectedMarker.Description = Description;
         _markerService.UpdateApp(SelectedMarker);
         IsEditing = false;
 

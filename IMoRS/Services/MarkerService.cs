@@ -14,7 +14,7 @@ namespace IMoRS.Services;
 
 public class MarkerService
 {
-    public void Add(double x, double y, string iconPath)
+    public MarkerDto Add(double x, double y, string iconPath)
     {
         using var db = new AppDbContext();
 
@@ -28,6 +28,14 @@ public class MarkerService
 
         db.Markers.Add(marker);
         db.SaveChanges();
+
+        return new MarkerDto
+        {
+            Id = marker.Id,
+            X = marker.X,
+            Y = marker.Y,
+            IconPath = marker.IconPath
+        };
     }
     
     public List<MarkerDto> GetAll()
@@ -64,6 +72,7 @@ public class MarkerService
     
     public void Delete(int markerId)
     {
+        Console.WriteLine($"Delete Id = {markerId}");
         using var db = new AppDbContext();
 
         var marker = db.Markers.Find(markerId);

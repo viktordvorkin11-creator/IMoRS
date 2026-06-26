@@ -36,6 +36,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0-preview.*">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="SkiaSharp" Version="4.150.0-preview.2.1" />
     </ItemGroup>
 
     <ItemGroup>
