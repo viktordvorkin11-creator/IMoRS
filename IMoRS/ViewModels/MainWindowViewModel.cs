@@ -83,6 +83,14 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private double buttonHeight2 = 0;
 
+    [ObservableProperty] private double _markerScale = 0.2;
+    
+    [ObservableProperty] private double _savedMarkerScale = 0.2;
+    
+    [ObservableProperty] private double sliderHeight = 0;
+    
+    [ObservableProperty] private double _selectedMarkerScale = 0.2;
+    
     public ObservableCollection<SignItem> Images { get; set; }
 
     private const int PageSize = 50;
@@ -185,7 +193,15 @@ public partial class MainWindowViewModel : ViewModelBase
         _markerLayer.Name = "Markers";
         _markerLayer.Features = new List<IFeature>();
 
-        foreach (var marker in _markerService.GetAll())
+        var allMarkers = _markerService.GetAll(); // Получаем один раз
+
+        if (allMarkers.Any())
+        {
+            _savedMarkerScale = allMarkers.First().Scale;
+            _markerScale = _savedMarkerScale;
+        }
+
+        foreach (var marker in allMarkers) // Используем allMarkers
         {
             var iconPath = marker.IconPath;
 
@@ -209,7 +225,7 @@ public partial class MainWindowViewModel : ViewModelBase
             feature.Styles.Add(new ImageStyle
             {
                 Image = $"file:///{iconPath.Replace("\\", "/")}",
-                SymbolScale = 0.2
+                SymbolScale = marker.Scale // <-- ИСПРАВЛЕНО: используется Scale из БД
             });
 
             _markers.Add(feature);
@@ -253,7 +269,7 @@ public partial class MainWindowViewModel : ViewModelBase
         feature.Styles.Add(new ImageStyle
         {
             Image = $"file:///{marker.IconPath!.Replace("\\", "/")}",
-            SymbolScale = 0.2,
+            SymbolScale = marker.Scale,
             Opacity = 1,
             Enabled = true
         });
@@ -262,6 +278,36 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _markerLayer.DataHasChanged();
         Map.Refresh();
+    }
+    
+    private void UpdateMarkerScale(double newScale)
+    {
+            if (SelectedMarker == null) return;
+    
+            SelectedMarker.Scale = newScale;
+    
+            var feature = _markers.FirstOrDefault(f =>
+            {
+                if (f["Marker"] is MarkerDto dto)
+                    return dto.Id == SelectedMarker.Id;
+                return false;
+            });
+    
+            if (feature == null) return;
+    
+            feature.Styles.Clear();
+            feature.Styles.Add(new ImageStyle
+            {
+                Image = $"file:///{SelectedMarker.IconPath!.Replace("\\", "/")}",
+                SymbolScale = newScale,
+                Opacity = 1,
+                Enabled = true
+            });
+    
+            feature["Marker"] = SelectedMarker;
+    
+            _markerLayer.DataHasChanged();
+            Map?.Refresh();
     }
 
     private string SaveIconToTemp(string avaresPath)
@@ -299,14 +345,14 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var feature = new PointFeature(mercatorX, mercatorY);
 
-        var markerDto = _markerService.Add(x, y, physicalPath);
+        var markerDto = _markerService.Add(x, y, physicalPath, _markerScale);
 
         feature["Marker"] = markerDto;
 
         feature.Styles.Add(new ImageStyle
         {
             Image = $"file:///{physicalPath.Replace("\\", "/")}",
-            SymbolScale = 0.2,
+            SymbolScale = _markerScale,
             Opacity = 1,
             Enabled = true
         });
@@ -434,6 +480,14 @@ public partial class MainWindowViewModel : ViewModelBase
         return destinationPath;
     }
 
+    partial void OnSelectedMarkerScaleChanged(double value)
+    {
+        if (SelectedMarker != null && IsEditing)
+        {
+            UpdateMarkerScale(value);
+        }
+    }
+    
     private async Task AddIcon()
     {
         if (App.MainWindow == null)
@@ -562,6 +616,10 @@ public partial class MainWindowViewModel : ViewModelBase
         PanelWidth1 = 400;
         if (SelectedMarker == null)
             return;
+        
+        _markerScale = SelectedMarker.Scale;
+        _savedMarkerScale = SelectedMarker.Scale;
+        SelectedMarkerScale = SelectedMarker.Scale;
 
         if (!string.IsNullOrEmpty(SelectedMarker.IconPath) && File.Exists(SelectedMarker.IconPath))
         {
@@ -571,8 +629,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             UserImage = null;
         }
-
-        // IsImageAdded = UserImage != null;
 
         await Task.Delay(300);
         ImDescOpacity = 1;
@@ -719,9 +775,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task EditMarker()
     {
         IsEditing = true;
+        _markerScale = SelectedMarker.Scale;
+        _savedMarkerScale = SelectedMarker.Scale;
+        SelectedMarkerScale = SelectedMarker.Scale;
         EditPartsOpacity = 1;
-
-
+        SliderHeight = 50;
         ButtonHeight1 = 0;
         await Task.Delay(175);
         ButtonHeight2 = 43;
@@ -741,8 +799,9 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 path = SaveIconToTemp(path);
             }
-
+            
             SelectedMarker.IconPath = path;
+            SelectedMarker.Scale = SelectedMarkerScale;
 
             _markerService.UpdateApp(SelectedMarker);
 
@@ -757,11 +816,36 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task SaveDescription()
+    private async Task ApplyChanges()
     {
         SelectedMarker.Description = Description;
+        SelectedMarker.Scale = SelectedMarkerScale;
+        SavedMarkerScale = SelectedMarkerScale;
         _markerService.UpdateApp(SelectedMarker);
         IsEditing = false;
+
+        EditPartsOpacity = 0;
+        SliderHeight = 0;
+
+        ButtonHeight2 = 0;
+        await Task.Delay(175);
+        ButtonHeight1 = 43;
+    }
+
+    [RelayCommand]
+    private async Task CancelChanges()
+    {
+        ClosePanel1();
+
+        SelectedMarkerScale = _savedMarkerScale;
+        
+        UpdateMarkerScale(_savedMarkerScale);
+        
+        IsEditing = false;
+        
+        
+        EditPartsOpacity = 0;
+        SliderHeight = 0;
 
         ButtonHeight2 = 0;
         await Task.Delay(175);

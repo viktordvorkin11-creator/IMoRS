@@ -160,8 +160,9 @@
 
                         <Grid.RowDefinitions>
 
-                            <RowDefinition Height="6*" />
-                            <RowDefinition Height="7*" />
+                            <RowDefinition Height="380" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
 
                         </Grid.RowDefinitions>
 
@@ -202,8 +203,38 @@
 
                         </Border>
 
-                        <!--Description Border-->
                         <Border Grid.Row="1"
+                                Classes="Tile"
+                                Padding="10"
+                                IsVisible="{Binding IsEditing}">
+                            
+                            <StackPanel VerticalAlignment="Stretch"
+                                        Height="{Binding SliderHeight}">
+
+                                <StackPanel.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="Height"
+                                                          Duration="0:0:0.3" />
+                                    </Transitions>
+                                </StackPanel.Transitions>
+
+                                
+                                <TextBlock Text="Размер меток" Foreground="White" FontWeight="Bold" />
+
+                                <TextBlock Text="{Binding SelectedMarkerScale, StringFormat='Масштаб: {00:F2}'}"
+                                           Foreground="White" />
+
+                                <Slider Minimum="0.05" Maximum="1.0"
+                                        Value="{Binding SelectedMarkerScale, Mode=TwoWay}"
+                                        SmallChange="0.05" LargeChange="0.1"
+                                        TickFrequency="0.05" IsSnapToTickEnabled="True" />
+
+                            </StackPanel>
+
+                        </Border>
+
+                        <!--Description Border-->
+                        <Border Grid.Row="2"
                                 Classes="Tile"
                                 Padding="10">
                             <Grid RowDefinitions="* Auto"
@@ -287,7 +318,7 @@
                                         </Button>
 
                                         <Button Classes="ControlButton SideButton GradientButton"
-                                                Command="{Binding SaveDescriptionCommand}"
+                                                Command="{Binding ApplyChangesCommand}"
                                                 Height="{Binding ButtonHeight2}"
                                                 VerticalAlignment="Top"
                                                 HorizontalAlignment="Center">
@@ -318,7 +349,7 @@
 
                                     <Button Grid.Column="2"
                                             Classes="ControlButton SideButton GradientButton"
-                                            Command="{Binding ClosePanel1Command}"
+                                            Command="{Binding CancelChangesCommand}"
                                             HorizontalAlignment="Center">
 
                                         <StackPanel Classes="StackButtonControl">

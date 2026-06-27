@@ -14,7 +14,7 @@ namespace IMoRS.Services;
 
 public class MarkerService
 {
-    public MarkerDto Add(double x, double y, string iconPath)
+    public MarkerDto Add(double x, double y, string iconPath, double scale)
     {
         using var db = new AppDbContext();
 
@@ -23,7 +23,8 @@ public class MarkerService
             X = x,
             Y = y,
             IconPath = iconPath,
-            ImagePath = iconPath
+            ImagePath = iconPath,
+            Scale = scale
         };
 
         db.Markers.Add(marker);
@@ -34,7 +35,8 @@ public class MarkerService
             Id = marker.Id,
             X = marker.X,
             Y = marker.Y,
-            IconPath = marker.IconPath
+            IconPath = marker.IconPath,
+            Scale = marker.Scale
         };
     }
     
@@ -50,6 +52,7 @@ public class MarkerService
                 Y = m.Y,
                 Description = m.Description,
                 IconPath = m.IconPath,
+                Scale = m.Scale
             })
             .ToList();
     }
@@ -66,7 +69,21 @@ public class MarkerService
         entity.Y = dto.Y;
         entity.Description = dto.Description;
         entity.IconPath = dto.IconPath ?? string.Empty;
+        entity.Scale = dto.Scale;
 
+        db.SaveChanges();
+    }
+
+    public void UpdateAllScales(double newScale)
+    {
+        using var db = new AppDbContext();
+        var markers = db.Markers.ToList();
+
+        foreach (var marker in markers)
+        {
+            marker.Scale = newScale;
+        }
+        
         db.SaveChanges();
     }
     

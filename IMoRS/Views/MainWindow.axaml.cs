@@ -39,6 +39,8 @@ public partial class MainWindow : Window
 
     private void OnMapPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        MainWindowViewModel vm = DataContext as MainWindowViewModel;
+        vm.CancelChangesCommand.Execute(null);
         _pointerDownPosition = e.GetPosition(mapControl);
         _isDragging = false;
         _isPressed = true;
