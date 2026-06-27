@@ -18,91 +18,58 @@ using Mapsui.Layers;
 using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.Tiling;
-using Mapsui.UI.Avalonia;
 using SkiaSharp;
 
 namespace IMoRS.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    [ObservableProperty] private Map? _map;
+    // Переменные
 
-    [ObservableProperty] private double imDescOpacity = 0;
-
-    [ObservableProperty] private bool isMaximized = false;
-
-    [ObservableProperty] private double panelWidth1 = 30;
-
-    [ObservableProperty] private double panelWidth2 = 15;
-
-    [ObservableProperty] private bool isAddingMarker = false;
-
-    [ObservableProperty] private double arrowAngle;
-
-    [ObservableProperty] private bool _isPanel2Open;
-
-    [ObservableProperty] private double borderListWidth = 25;
-
-    [ObservableProperty] private double borderListHeight = 0;
-
-    [ObservableProperty] private bool isListOpen;
-
-    [ObservableProperty] private double overlayOpacity;
+    #region Variables
 
     [ObservableProperty] private MarkerDto? selectedMarker;
-
     [ObservableProperty] private Bitmap? userImage;
-
-    [ObservableProperty] private double iconsOpacity = 0;
-
-    [ObservableProperty] private double appOpacity = 0;
-
-    [ObservableProperty] private bool _isMapVisible = false;
-
-    [ObservableProperty] private string _statusMessage = string.Empty;
-
     [ObservableProperty] private Bitmap? selectedIcon;
-
-    [ObservableProperty] private string? selectedIconPath;
-
     [ObservableProperty] private SignItem? selectedSign;
-
     [ObservableProperty] private ObservableCollection<SignItem> _filteredImages = new();
 
-    [ObservableProperty] private bool _isEditing = false;
+    [ObservableProperty] private double iconsOpacity = 0;
+    [ObservableProperty] private double appOpacity = 0;
+    [ObservableProperty] private double descOpacity = 0;
+    [ObservableProperty] private double editPartsOpacity = 0;
+    [ObservableProperty] private double overlayOpacity;
+    [ObservableProperty] private double panelWidth1 = 30;
+    [ObservableProperty] private double panelWidth2 = 15;
+    [ObservableProperty] private double borderListWidth = 25;
+    [ObservableProperty] private double buttonHeight2 = 0;
+    [ObservableProperty] private double borderListHeight = 0;
+    [ObservableProperty] private double buttonHeight1 = 43;
+    [ObservableProperty] private double sliderHeight = 0;
+    [ObservableProperty] private double markerScale = 0.2;
 
+    [ObservableProperty] private bool _isMaximized = false;
+    [ObservableProperty] private bool _isAddingMarker = false;
+    [ObservableProperty] private bool _isPanel2Open;
+    [ObservableProperty] private bool _isListOpen;
+    [ObservableProperty] private bool _isMapVisible = false;
+    [ObservableProperty] private bool _isEditing = false;
     [ObservableProperty] private bool _isPanel1Open = false;
 
-    [ObservableProperty] private double editPartsOpacity = 0;
-
+    [ObservableProperty] private string statusMessage = string.Empty;
+    [ObservableProperty] private string? selectedIconPath;
     [ObservableProperty] private string? customMarkerImagePath;
-
     [ObservableProperty] private string description = string.Empty;
 
-    [ObservableProperty] private double buttonHeight1 = 43;
-
-    [ObservableProperty] private double buttonHeight2 = 0;
-
-    [ObservableProperty] private double _markerScale = 0.2;
-    
-    [ObservableProperty] private double _savedMarkerScale = 0.2;
-    
-    [ObservableProperty] private double sliderHeight = 0;
-    
-    [ObservableProperty] private double _selectedMarkerScale = 0.2;
-    
     public ObservableCollection<SignItem> Images { get; set; }
-
-    private const int PageSize = 50;
-
     private readonly MarkerService _markerService = new();
-
     private readonly List<IFeature> _markers = [];
-
     private double? _pendingMarkerX;
-
     private double? _pendingMarkerY;
 
+    #endregion
+
+    // Конструктор
     public MainWindowViewModel()
     {
         Images = new ObservableCollection<SignItem>();
@@ -114,6 +81,9 @@ public partial class MainWindowViewModel : ViewModelBase
         LoadApp();
     }
 
+    /// <summary>
+    /// Выполняет плавное появление приложения с задержками
+    /// </summary>
     private async Task LoadApp()
     {
         await Task.Delay(1000);
@@ -122,22 +92,28 @@ public partial class MainWindowViewModel : ViewModelBase
         IsMapVisible = true;
     }
 
+    /// <summary>
+    /// Загружает все изображения из папки ресурсов и пользовательской директории
+    /// </summary>
     private void LoadImages()
     {
         Images.Clear();
 
+        // Загружаем встроенные иконки из ресурсов приложения
         foreach (var item in LoadAllImagesFromAssets("Assets/SignIconPng"))
         {
             Images.Add(item);
         }
 
+        // Определяем путь к пользовательской папке с иконками
         var iconsDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "IMoRS",
             "Icons");
 
-        Directory.CreateDirectory(iconsDir);
+        Directory.CreateDirectory(iconsDir); // Создаем папку, если её нет
 
+        // Загружаем все пользовательские иконки из папки
         foreach (var file in Directory.GetFiles(iconsDir))
         {
             try
@@ -154,9 +130,15 @@ public partial class MainWindowViewModel : ViewModelBase
             }
         }
 
+        // Обновляем отфильтрованный список
         FilteredImages = new ObservableCollection<SignItem>(Images);
     }
 
+    /// <summary>
+    /// Загружает все изображения из указанной папки в ресурсах приложения
+    /// </summary>
+    /// <param name="assetsFolderPath">Путь к папке в ресурсах</param>
+    /// <returns>Список элементов изображений</returns>
     private List<SignItem> LoadAllImagesFromAssets(string assetsFolderPath)
     {
         var items = new List<SignItem>();
@@ -164,6 +146,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
         var folderUri = new Uri($"avares://{assemblyName}/{assetsFolderPath}");
 
+        // Перебираем все ресурсы в указанной папке
         foreach (var assetUri in AssetLoader.GetAssets(folderUri, null))
         {
             using var stream = AssetLoader.Open(assetUri);
@@ -178,36 +161,45 @@ public partial class MainWindowViewModel : ViewModelBase
         return items;
     }
 
+    #region Работа с картой
+    [ObservableProperty] private Map? _map;
     private readonly MemoryLayer _markerLayer = new()
     {
         Style = null,
         Name = "Merkers",
         Features = new List<IFeature>()
     };
-
+    
+    /// <summary>
+    /// Создает и настраивает карту с загруженными метками
+    /// </summary>
     private void CreateMap()
     {
         var map = new Map();
-        map.Layers.Add(OpenStreetMap.CreateTileLayer());
+        map.Layers.Add(OpenStreetMap.CreateTileLayer()); // Добавляем слои карты
 
         _markerLayer.Name = "Markers";
         _markerLayer.Features = new List<IFeature>();
 
-        var allMarkers = _markerService.GetAll(); // Получаем один раз
+        // Получаем все сохраненные метки из базы
+        var allMarkers = _markerService.GetAll();
 
+        // Устанавливаем масштаб первой метки по умолчанию
         if (allMarkers.Any())
         {
-            _savedMarkerScale = allMarkers.First().Scale;
-            _markerScale = _savedMarkerScale;
+            SelectedMarker.Scale = allMarkers.First().Scale;
+            markerScale = SelectedMarker.Scale;
         }
 
-        foreach (var marker in allMarkers) // Используем allMarkers
+        // Добавляем все метки на карту
+        foreach (var marker in allMarkers)
         {
             var iconPath = marker.IconPath;
 
             if (string.IsNullOrEmpty(iconPath))
                 continue;
 
+            // Преобразуем путь из ресурсов во временный файл
             if (iconPath.StartsWith("avares://"))
             {
                 iconPath = SaveIconToTemp(iconPath);
@@ -217,15 +209,17 @@ public partial class MainWindowViewModel : ViewModelBase
             if (!File.Exists(iconPath))
                 continue;
 
+            // Создаем точку на карте в координатах меркатора
             var feature = new PointFeature(
                 SphericalMercator.FromLonLat(marker.X, marker.Y));
 
-            feature["Marker"] = marker;
+            feature["Marker"] = marker; // Сохраняем данные метки
 
+            // Добавляем стиль с изображением
             feature.Styles.Add(new ImageStyle
             {
                 Image = $"file:///{iconPath.Replace("\\", "/")}",
-                SymbolScale = marker.Scale // <-- ИСПРАВЛЕНО: используется Scale из БД
+                SymbolScale = marker.Scale
             });
 
             _markers.Add(feature);
@@ -234,6 +228,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _markerLayer.Features = _markers;
         map.Layers.Add(_markerLayer);
 
+        // Восстанавливаем состояние карты или устанавливаем позицию по умолчанию
         var state = MapStateService.Load();
 
         if (state != null && state.X > 0 && state.Y > 0)
@@ -243,6 +238,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         else
         {
+            // Центрируем на Новосибирске
             var (centerX, centerY) = SphericalMercator.FromLonLat(82.9204, 55.0302);
             map.Navigator.CenterOn(centerX, centerY);
             map.Navigator.ZoomTo(12);
@@ -250,9 +246,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Map = map;
     }
+    #endregion
 
+    /// <summary>
+    /// Обновляет внешний вид метки на карте
+    /// </summary>
+    /// <param name="marker">Обновленные данные метки</param>
     private void UpdateMarkerOnMap(MarkerDto marker)
     {
+        // Находим существующую метку по ID
         var feature = _markers.FirstOrDefault(f =>
         {
             if (f["Marker"] is MarkerDto dto)
@@ -264,8 +266,10 @@ public partial class MainWindowViewModel : ViewModelBase
         if (feature == null)
             return;
 
+        // Очищаем старые стили
         feature.Styles.Clear();
 
+        // Добавляем новый стиль с обновленными данными
         feature.Styles.Add(new ImageStyle
         {
             Image = $"file:///{marker.IconPath!.Replace("\\", "/")}",
@@ -274,42 +278,53 @@ public partial class MainWindowViewModel : ViewModelBase
             Enabled = true
         });
 
-        feature["Marker"] = marker;
+        feature["Marker"] = marker; // Обновляем данные
 
-        _markerLayer.DataHasChanged();
-        Map.Refresh();
+        _markerLayer.DataHasChanged(); // Уведомляем о изменении
+        Map.Refresh(); // Обновляем карту
     }
-    
+
+    /// <summary>
+    /// Обновляет масштаб выбранной метки
+    /// </summary>
+    /// <param name="newScale">Новый масштаб</param>
     private void UpdateMarkerScale(double newScale)
     {
-            if (SelectedMarker == null) return;
-    
-            SelectedMarker.Scale = newScale;
-    
-            var feature = _markers.FirstOrDefault(f =>
-            {
-                if (f["Marker"] is MarkerDto dto)
-                    return dto.Id == SelectedMarker.Id;
-                return false;
-            });
-    
-            if (feature == null) return;
-    
-            feature.Styles.Clear();
-            feature.Styles.Add(new ImageStyle
-            {
-                Image = $"file:///{SelectedMarker.IconPath!.Replace("\\", "/")}",
-                SymbolScale = newScale,
-                Opacity = 1,
-                Enabled = true
-            });
-    
-            feature["Marker"] = SelectedMarker;
-    
-            _markerLayer.DataHasChanged();
-            Map?.Refresh();
+        if (SelectedMarker == null) return;
+
+        SelectedMarker.Scale = newScale; // Обновляем данные
+
+        // Находим фичу метки
+        var feature = _markers.FirstOrDefault(f =>
+        {
+            if (f["Marker"] is MarkerDto dto)
+                return dto.Id == SelectedMarker.Id;
+            return false;
+        });
+
+        if (feature == null) return;
+
+        // Обновляем стиль с новым масштабом
+        feature.Styles.Clear();
+        feature.Styles.Add(new ImageStyle
+        {
+            Image = $"file:///{SelectedMarker.IconPath!.Replace("\\", "/")}",
+            SymbolScale = newScale,
+            Opacity = 1,
+            Enabled = true
+        });
+
+        feature["Marker"] = SelectedMarker;
+
+        _markerLayer.DataHasChanged();
+        Map?.Refresh();
     }
 
+    /// <summary>
+    /// Сохраняет иконку из ресурсов во временную папку
+    /// </summary>
+    /// <param name="avaresPath">Путь к ресурсу</param>
+    /// <returns>Физический путь к сохраненному файлу</returns>
     private string SaveIconToTemp(string avaresPath)
     {
         try
@@ -322,6 +337,7 @@ public partial class MainWindowViewModel : ViewModelBase
             if (File.Exists(tempPath))
                 return tempPath;
 
+            // Копируем из ресурсов во временный файл
             using var stream = AssetLoader.Open(new Uri(avaresPath));
             using var fileStream = File.Create(tempPath);
             stream.CopyTo(fileStream);
@@ -330,10 +346,16 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            return avaresPath;
+            return avaresPath; // В случае ошибки возвращаем исходный путь
         }
     }
 
+    /// <summary>
+    /// Добавляет новую метку на карту
+    /// </summary>
+    /// <param name="x">Координата X (долгота)</param>
+    /// <param name="y">Координата Y (широта)</param>
+    /// <param name="iconPath">Путь к иконке</param>
     private void AddMarker(double x, double y, string iconPath)
     {
         var physicalPath = SaveIconToTemp(iconPath);
@@ -341,34 +363,40 @@ public partial class MainWindowViewModel : ViewModelBase
         if (_markerLayer == null || Map == null)
             return;
 
+        // Конвертируем координаты в проекцию меркатора
         var (mercatorX, mercatorY) = SphericalMercator.FromLonLat(x, y);
 
         var feature = new PointFeature(mercatorX, mercatorY);
 
-        var markerDto = _markerService.Add(x, y, physicalPath, _markerScale);
+        // Сохраняем метку в базу данных
+        var markerDto = _markerService.Add(x, y, physicalPath, markerScale);
 
         feature["Marker"] = markerDto;
 
+        // Добавляем стиль
         feature.Styles.Add(new ImageStyle
         {
             Image = $"file:///{physicalPath.Replace("\\", "/")}",
-            SymbolScale = _markerScale,
+            SymbolScale = markerScale,
             Opacity = 1,
             Enabled = true
         });
 
         _markers.Add(feature);
-
         _markerLayer.Features = new List<IFeature>(_markers);
 
         _markerLayer.DataHasChanged();
         Map.Refresh();
     }
 
+    /// <summary>
+    /// Редактирует иконку существующей метки
+    /// </summary>
     private async Task EditIcon()
     {
         if (App.MainWindow != null)
         {
+            // Открываем диалог выбора файла
             var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions
                 {
@@ -388,6 +416,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var photoPath = files[0].Path.LocalPath;
 
+            // Добавляем новую иконку в коллекцию
             var sign = new SignItem
             {
                 Image = new Bitmap(photoPath),
@@ -396,13 +425,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
             Images.Add(sign);
             FilteredImages.Add(sign);
-            
-            foreach (var img in Images)
-                img.IsSelected = false;
-            
+
+            // Сбрасываем выделение
             foreach (var img in Images)
                 img.IsSelected = false;
 
+            // Устанавливаем новую иконку для метки
             SelectedMarker.IconPath = ResizeAndSaveImage(photoPath);
             _markerService.UpdateApp(SelectedMarker);
 
@@ -410,6 +438,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             UserImage = new Bitmap(photoPath);
 
+            // Сохраняем иконку в пользовательскую папку
             var iconsDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "IMoRS",
@@ -424,6 +453,11 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Изменяет размер изображения и сохраняет его в формате PNG
+    /// </summary>
+    /// <param name="sourcePath">Путь к исходному изображению</param>
+    /// <returns>Путь к сохраненному изображению</returns>
     private string ResizeAndSaveImage(string sourcePath)
     {
         var iconsDir = Path.Combine(
@@ -437,8 +471,9 @@ public partial class MainWindowViewModel : ViewModelBase
             iconsDir,
             $"{Guid.NewGuid()}.png");
 
-        const int maxSize = 512;
+        const int maxSize = 512; // Максимальный размер изображения
 
+        // Используем SkiaSharp для работы с изображениями
         using var input = File.OpenRead(sourcePath);
         using var codec = SKCodec.Create(input);
 
@@ -447,11 +482,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var info = codec.Info;
 
+        // Вычисляем масштаб для сохранения пропорций
         float scale = Math.Min(
             (float)maxSize / info.Width,
             (float)maxSize / info.Height);
 
-        scale = Math.Min(scale, 1f);
+        scale = Math.Min(scale, 1f); // Не увеличиваем изображение
 
         int width = (int)(info.Width * scale);
         int height = (int)(info.Height * scale);
@@ -460,6 +496,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         using var bitmap = SKBitmap.Decode(sourcePath);
 
+        // Изменяем размер
         using var resizedBitmap = bitmap.Resize(
             resizedInfo,
             SKSamplingOptions.Default);
@@ -469,6 +506,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         using var image = SKImage.FromBitmap(resizedBitmap);
 
+        // Сохраняем в PNG
         using var data = image.Encode(
             SKEncodedImageFormat.Png,
             100);
@@ -480,14 +518,9 @@ public partial class MainWindowViewModel : ViewModelBase
         return destinationPath;
     }
 
-    partial void OnSelectedMarkerScaleChanged(double value)
-    {
-        if (SelectedMarker != null && IsEditing)
-        {
-            UpdateMarkerScale(value);
-        }
-    }
-    
+    /// <summary>
+    /// Добавляет новую иконку в коллекцию из файла
+    /// </summary>
     private async Task AddIcon()
     {
         if (App.MainWindow == null)
@@ -512,6 +545,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CustomMarkerImagePath = ResizeAndSaveImage(files[0].Path.LocalPath);
 
+        // Добавляем в коллекцию
         var sign = new SignItem
         {
             Image = new Bitmap(CustomMarkerImagePath),
@@ -520,16 +554,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Images.Add(sign);
         FilteredImages.Add(sign);
-        
-        SelectIcon(sign);
+
+        SelectIcon(sign); // Выбираем добавленную иконку
     }
 
+    /// <summary>
+    /// Очищает данные ожидающей метки
+    /// </summary>
     public void ClearPendingMarker()
     {
         _pendingMarkerX = null;
         _pendingMarkerY = null;
     }
 
+    /// <summary>
+    /// Устанавливает координаты для новой метки
+    /// </summary>
     public void SetPendingMarker(double x, double y)
     {
         _pendingMarkerX = x;
@@ -537,15 +577,19 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAddingMarker = true;
     }
 
+    /// <summary>
+    /// Добавляет метку в сохраненных координатах
+    /// </summary>
     [RelayCommand]
     private void AddMarkerFromPending()
     {
         try
         {
-            CloseList();
+            CloseList(); // Закрываем список иконок
 
             string iconPath;
 
+            // Определяем путь к иконке
             if (!string.IsNullOrEmpty(CustomMarkerImagePath))
             {
                 iconPath = CustomMarkerImagePath;
@@ -560,7 +604,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 _pendingMarkerY.Value,
                 iconPath);
 
-            CustomMarkerImagePath = null;
+            CustomMarkerImagePath = null; // Сбрасываем пользовательскую иконку
 
             ClearPendingMarker();
         }
@@ -582,7 +626,9 @@ public partial class MainWindowViewModel : ViewModelBase
         App.MainWindow?.WindowState = WindowState.Minimized;
     }
 
-
+    /// <summary>
+    /// Переключает состояние окна между обычным и полноэкранным
+    /// </summary>
     [RelayCommand]
     public void MaxRestore()
     {
@@ -594,33 +640,31 @@ public partial class MainWindowViewModel : ViewModelBase
             if (App.MainWindow.WindowState == WindowState.Maximized)
             {
                 App.MainWindow.WindowState = WindowState.Maximized;
-
-
                 IsMaximized = true;
             }
             else
             {
                 App.MainWindow.WindowState = WindowState.Normal;
-
                 App.MainWindow.Width = 1600;
                 App.MainWindow.Height = 900;
-
                 IsMaximized = false;
             }
         }
     }
 
+    /// <summary>
+    /// Открывает панель информации о метке
+    /// </summary>
     [RelayCommand]
     public async Task OpenPanel1()
     {
-        PanelWidth1 = 400;
+        PanelWidth1 = 400; // Расширяем панель
         if (SelectedMarker == null)
             return;
-        
-        _markerScale = SelectedMarker.Scale;
-        _savedMarkerScale = SelectedMarker.Scale;
-        SelectedMarkerScale = SelectedMarker.Scale;
 
+        MarkerScale = SelectedMarker.Scale;
+
+        // Загружаем изображение метки
         if (!string.IsNullOrEmpty(SelectedMarker.IconPath) && File.Exists(SelectedMarker.IconPath))
         {
             UserImage = new Bitmap(SelectedMarker.IconPath);
@@ -630,33 +674,35 @@ public partial class MainWindowViewModel : ViewModelBase
             UserImage = null;
         }
 
-        await Task.Delay(300);
-        ImDescOpacity = 1;
+        await Task.Delay(300); // Ждем анимации
+        DescOpacity = 1; // Показываем описание
         IsPanel1Open = true;
         Description = SelectedMarker.Description;
     }
 
+    /// <summary>
+    /// Закрывает панель информации о метке
+    /// </summary>
     [RelayCommand]
     public async Task ClosePanel1()
     {
         if (!IsPanel1Open)
             return;
-        PanelWidth1 = 30;
-        ImDescOpacity = 0;
+        PanelWidth1 = 30; // Сворачиваем панель
+        DescOpacity = 0; // Скрываем описание
         await Task.Delay(175);
         IsPanel1Open = false;
         IsEditing = false;
         Description = string.Empty;
         ButtonHeight2 = 0;
         await Task.Delay(175);
-        ButtonHeight1 = 43;
+        ButtonHeight1 = 43; // Восстанавливаем кнопки
     }
 
     [RelayCommand]
     public void ClosePanel2()
     {
         PanelWidth2 = 15;
-        ArrowAngle = 180;
         IsPanel2Open = false;
     }
 
@@ -664,14 +710,16 @@ public partial class MainWindowViewModel : ViewModelBase
     public void OpenPanel2()
     {
         IsPanel2Open = true;
-
         PanelWidth2 = 160;
-        ArrowAngle = 0;
     }
 
+    /// <summary>
+    /// Открывает список иконок для выбора
+    /// </summary>
     [RelayCommand]
     public async Task OpenList()
     {
+        // Если не в режиме редактирования, закрываем панель
         if (!IsEditing)
         {
             ClosePanel1();
@@ -681,14 +729,14 @@ public partial class MainWindowViewModel : ViewModelBase
             if (!IsPanel1Open)
                 return;
             PanelWidth1 = 30;
-            ImDescOpacity = 0;
+            DescOpacity = 0;
             await Task.Delay(175);
             IsPanel1Open = false;
         }
 
         ClosePanel2();
-        OverlayOpacity = 0.67;
-        BorderListHeight = App.MainWindow!.Bounds.Height * 0.7;
+        OverlayOpacity = 0.67; // Затемняем фон
+        BorderListHeight = App.MainWindow!.Bounds.Height * 0.7; // Устанавливаем размеры списка
         await Task.Delay(200);
         BorderListWidth = App.MainWindow!.Bounds.Width * 0.7;
         await Task.Delay(200);
@@ -699,6 +747,9 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusMessage = string.Empty;
     }
 
+    /// <summary>
+    /// Закрывает список иконок
+    /// </summary>
     [RelayCommand]
     public async Task CloseList()
     {
@@ -714,37 +765,47 @@ public partial class MainWindowViewModel : ViewModelBase
         BorderListWidth = 25;
         IconsOpacity = 0;
         if (IsEditing)
-            OpenPanel1();
+            OpenPanel1(); // Возвращаем панель редактирования
     }
 
+    /// <summary>
+    /// Добавляет или редактирует иконку в зависимости от режима
+    /// </summary>
     [RelayCommand]
     private void AddOrEditIcon()
     {
         if (IsEditing)
         {
-            EditIcon();
+            EditIcon(); // Редактируем существующую
         }
         else
         {
-            AddIcon();
+            AddIcon(); // Добавляем новую
         }
     }
 
+    /// <summary>
+    /// Выбирает иконку из списка
+    /// </summary>
     [RelayCommand]
     private void SelectIcon(SignItem item)
     {
         if (item == null) return;
 
-        CustomMarkerImagePath = null;
+        CustomMarkerImagePath = null; // Сбрасываем пользовательскую иконку
 
         SelectedSign = item;
 
+        // Снимаем выделение со всех иконок, кроме выбранной
         foreach (var img in Images)
         {
             img.IsSelected = img == item;
         }
     }
 
+    /// <summary>
+    /// Удаляет выбранную метку
+    /// </summary>
     [RelayCommand]
     private void DeleteMarker()
     {
@@ -753,8 +814,9 @@ public partial class MainWindowViewModel : ViewModelBase
         if (SelectedMarker == null)
             return;
 
-        _markerService.Delete(SelectedMarker.Id);
+        _markerService.Delete(SelectedMarker.Id); // Удаляем из базы
 
+        // Удаляем с карты
         var feature = _markers.FirstOrDefault(f =>
             f["Marker"] is MarkerDto dto &&
             dto.Id == SelectedMarker.Id);
@@ -768,23 +830,27 @@ public partial class MainWindowViewModel : ViewModelBase
 
         SelectedMarker = null;
 
-        ClosePanel1();
+        ClosePanel1(); // Закрываем панель
     }
 
+    /// <summary>
+    /// Переходит в режим редактирования метки
+    /// </summary>
     [RelayCommand]
     private async Task EditMarker()
     {
         IsEditing = true;
-        _markerScale = SelectedMarker.Scale;
-        _savedMarkerScale = SelectedMarker.Scale;
-        SelectedMarkerScale = SelectedMarker.Scale;
-        EditPartsOpacity = 1;
-        SliderHeight = 50;
-        ButtonHeight1 = 0;
+        MarkerScale = SelectedMarker.Scale;
+        EditPartsOpacity = 1; // Показываем элементы редактирования
+        SliderHeight = 50; // Показываем слайдер масштаба
+        ButtonHeight1 = 0; // Скрываем основные кнопки
         await Task.Delay(175);
-        ButtonHeight2 = 43;
+        ButtonHeight2 = 43; // Показываем кнопки редактирования
     }
 
+    /// <summary>
+    /// Применяет выбранную иконку к метке
+    /// </summary>
     [RelayCommand]
     private void ApplySelectedIcon()
     {
@@ -795,55 +861,62 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var path = SelectedSign.Path;
 
+            // Преобразуем путь из ресурсов
             if (path.StartsWith("avares://"))
             {
                 path = SaveIconToTemp(path);
             }
-            
+
             SelectedMarker.IconPath = path;
-            SelectedMarker.Scale = SelectedMarkerScale;
+            SelectedMarker.Scale = MarkerScale;
 
-            _markerService.UpdateApp(SelectedMarker);
+            _markerService.UpdateApp(SelectedMarker); // Обновляем в базе
 
-            UpdateMarkerOnMap(SelectedMarker);
+            UpdateMarkerOnMap(SelectedMarker); // Обновляем на карте
 
-            CloseList();
+            CloseList(); // Закрываем список
         }
         catch
         {
-            return;
         }
     }
 
+    /// <summary>
+    /// Применяет все изменения метки
+    /// </summary>
     [RelayCommand]
     private async Task ApplyChanges()
     {
         SelectedMarker.Description = Description;
-        SelectedMarker.Scale = SelectedMarkerScale;
-        SavedMarkerScale = SelectedMarkerScale;
+        SelectedMarker.Scale = MarkerScale;
         _markerService.UpdateApp(SelectedMarker);
         IsEditing = false;
 
+        // Скрываем элементы редактирования
         EditPartsOpacity = 0;
         SliderHeight = 0;
 
         ButtonHeight2 = 0;
         await Task.Delay(175);
-        ButtonHeight1 = 43;
+        ButtonHeight1 = 43; // Восстанавливаем основные кнопки
     }
 
+    /// <summary>
+    /// Отменяет изменения метки
+    /// </summary>
     [RelayCommand]
     private async Task CancelChanges()
     {
         ClosePanel1();
 
-        SelectedMarkerScale = _savedMarkerScale;
-        
-        UpdateMarkerScale(_savedMarkerScale);
-        
+        // Восстанавливаем масштаб
+        MarkerScale = SelectedMarker.Scale;
+
+        UpdateMarkerScale(SelectedMarker.Scale);
+
         IsEditing = false;
-        
-        
+
+        // Скрываем элементы редактирования
         EditPartsOpacity = 0;
         SliderHeight = 0;
 
