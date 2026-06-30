@@ -69,7 +69,7 @@ public class MarkerService
                 Y = m.Y,
                 Description = m.Description,
                 IconPath = m.IconPath,
-                Scale = m.Scale 
+                Scale = m.Scale
             })
             .ToList(); 
     }

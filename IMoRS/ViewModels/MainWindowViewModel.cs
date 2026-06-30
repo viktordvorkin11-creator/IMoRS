@@ -11,6 +11,7 @@ using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FFmpegVideoPlayer.Core;
 using IMoRS.DTOs;
 using IMoRS.Services;
 using Mapsui;
@@ -77,7 +78,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IconsOpacity = 0;
         CreateMap();
         LoadImages();
-        // LoadApp();
+        LoadApp();
     }
 
     /// <summary>
@@ -506,6 +507,7 @@ public partial class MainWindowViewModel : ViewModelBase
     #endregion
 
     #region Метки
+
     /// <summary>
     /// Обновляет значение слайдера при движении 
     /// </summary>
@@ -876,8 +878,6 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void DeleteMarker()
     {
-        Console.WriteLine($"Selected Id = {SelectedMarker.Id}");
-
         if (SelectedMarker == null)
             return;
 
@@ -911,9 +911,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
         MarkerScale = SelectedMarker.Scale;
         EditPartsOpacity = 1; // Показываем элементы редактирования
-        
+
         SliderHeight = 70; // Показываем слайдер масштаба
-        
+
         ButtonHeight1 = 0; // Скрываем основные кнопки
         await Task.Delay(175);
         ButtonHeight2 = 43; // Показываем кнопки редактирования
@@ -947,10 +947,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task CancelChanges()
     {
         ClosePanel1();
-
-        // Восстанавливаем масштаб
-        MarkerScale = OldMarkerScale;
-        UpdateMarkerScale(OldMarkerScale);
+        if (OldMarkerScale != 0)
+        {
+            // Восстанавливаем масштаб
+            MarkerScale = OldMarkerScale;
+            UpdateMarkerScale(OldMarkerScale);
+        }
 
 
         IsEditing = false;

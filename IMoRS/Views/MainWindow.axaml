@@ -3,6 +3,7 @@
         xmlns:vm="using:IMoRS.ViewModels"
         xmlns:avalonia="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.UI.Avalonia"
         xmlns:converters="using:IMoRS.Converters"
+        xmlns:fFmpegVideoPlayer="clr-namespace:Avalonia.FFmpegVideoPlayer;assembly=Avalonia.FFmpegVideoPlayer"
 
 
         x:Class="IMoRS.Views.MainWindow"
@@ -43,15 +44,13 @@
     <!-- Основной контейнер окна -->
     <Grid>
         
-        
-        
         <!--Фон-->
         <Image Source="/Assets/BackGroung.png"
                Stretch="UniformToFill" />
 
         <!--Затемнение-->
         <Border Classes="Overlay" />
-
+        
         <!-- Основная сетка с отступами и анимацией прозрачности -->
         <Grid RowDefinitions="Auto *"
               Margin="15"
@@ -250,10 +249,8 @@
                                         Minimum="0.05" 
                                         Maximum="1.0"
                                         Value="{Binding MarkerScale, Mode=TwoWay}"
-                                        SmallChange="0.01" 
-                                        LargeChange="0.1"
                                         VerticalAlignment="Top"
-                                        TickFrequency="0.05" 
+                                        TickFrequency="0.01" 
                                         IsSnapToTickEnabled="True" />
 
                             </Grid>

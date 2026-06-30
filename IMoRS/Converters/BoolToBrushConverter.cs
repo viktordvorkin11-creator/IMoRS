@@ -6,10 +6,11 @@ using System;
  
  namespace IMoRS.Converters;
  
+ /// <summary>
+ /// Конвертер bool в кисть для подсветки выбранного элемента в списке
+ /// </summary>
  public class BoolToBrushConverter : IValueConverter
  {
-     public static BoolToBrushConverter Instance { get; } = new();
-     
      public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
      {
          if (value is bool isSelected && isSelected)
