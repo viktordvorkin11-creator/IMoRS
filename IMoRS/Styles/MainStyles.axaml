@@ -296,4 +296,10 @@
         <Setter Property="Padding" Value="8" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
+    <Style Selector="Slider.Neon">
+        <Style Selector="^ Thumb">
+            <Setter Property="Background" Value="#FFA71DFF"/>
+            <Setter Property="BorderBrush" Value="#FF4F1899"/>
+        </Style>
+    </Style>
 </Styles>

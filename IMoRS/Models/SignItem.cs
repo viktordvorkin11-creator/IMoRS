@@ -10,6 +10,4 @@ public partial class SignItem : ObservableObject
     [ObservableProperty] private string? path;
     
     [ObservableProperty] private bool _isSelected;
-
-    public ICommand? SelectCommand { get; set; }
 }

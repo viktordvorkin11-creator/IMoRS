@@ -14,6 +14,12 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Content Include="Assets\Videos\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.0.4" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
         <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
@@ -37,11 +43,5 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="SkiaSharp" Version="4.150.0-preview.2.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Views\ConfirmDelete.axaml.cs">
-        <DependentUpon>ConfirmDelete.axaml</DependentUpon>
-      </Compile>
     </ItemGroup>
 </Project>

@@ -22,11 +22,13 @@ namespace IMoRS.Views;
 
 public partial class MainWindow : Window
 {
+    // Переменные
     private Point _pointerDownPosition;
     private bool _isPressed;
     private bool _isDragging;
     private bool _isMarkerClicked;
 
+    // Конструктор
     public MainWindow()
     {
         InitializeComponent();
@@ -37,15 +39,15 @@ public partial class MainWindow : Window
         mapControl.PointerReleased += OnMapPointerReleased;
     }
 
+    // Вызывается при нажатии на карте, переключает режимы нажатия и зажатия
     private void OnMapPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        MainWindowViewModel vm = DataContext as MainWindowViewModel;
-        vm.CancelChangesCommand.Execute(null);
         _pointerDownPosition = e.GetPosition(mapControl);
         _isDragging = false;
         _isPressed = true;
     }
 
+    // При перемещении карты закрывает панели, отменяет режим редактирования
     private void OnMapPointerMoved(object? sender, PointerEventArgs e)
     { 
         if (_isPressed && DataContext is MainWindowViewModel vm)
@@ -55,6 +57,10 @@ public partial class MainWindow : Window
         
             if (Math.Abs(delta.X) > 5 || Math.Abs(delta.Y) > 5)
             {
+                if (vm.IsPanel1Open)
+                {
+                    vm.CancelChangesCommand.Execute(null);
+                }
                 _isDragging = true;
                 vm.ClosePanel2Command.Execute(null);
                 vm.ClosePanel1Command.Execute(null);
@@ -62,6 +68,7 @@ public partial class MainWindow : Window
         }
     }
 
+    // Вызывается при отпускании мыши, закрывает обе панели, отменяет режим редактирования, если тот включен
     private void OnMapPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (_isMarkerClicked)
@@ -73,6 +80,10 @@ public partial class MainWindow : Window
 
         if (!_isDragging && DataContext is MainWindowViewModel vm)
         {
+            if (vm.IsPanel1Open)
+            {
+                vm.CancelChangesCommand.Execute(null);
+            }
             vm.ClosePanel1Command.Execute(null);
             vm.OpenPanel2Command.Execute(null);
         }
@@ -81,6 +92,7 @@ public partial class MainWindow : Window
         _isDragging = false;
     }
 
+    // Сохраняет значения карты при закрытии приложения
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         if (mapControl.Map is not null)
@@ -98,21 +110,13 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
+    // Двигает окно
     private void DragWindow(object? sender, PointerPressedEventArgs e)
     {
         BeginMoveDrag(e);
     }
 
-    private void CloseWindow(object? sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    private void Minimize(object? sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
+    // Проверяет клик по карте, если он был совершён по метке - открывает панель информации о метке, если нет - открывает панель создания метки
     private void MapControlInfo(object? sender, MapInfoEventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm)
@@ -140,6 +144,7 @@ public partial class MainWindow : Window
         }
     }
 
+    // При нажатии по заднему фону закрывает панель со знаками метки
     private void Overlay_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (DataContext is MainWindowViewModel vm)

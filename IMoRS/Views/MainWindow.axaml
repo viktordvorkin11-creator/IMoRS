@@ -1,9 +1,9 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:mapsui="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.Avalonia"
         xmlns:vm="using:IMoRS.ViewModels"
         xmlns:avalonia="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.UI.Avalonia"
         xmlns:converters="using:IMoRS.Converters"
+
 
         x:Class="IMoRS.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -15,7 +15,9 @@
         WindowDecorations="None"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="50">
+    
 
+    <!-- Анимации перехода для окна -->
     <Window.Transitions>
         <Transitions>
             <DoubleTransition Property="Width"
@@ -23,11 +25,12 @@
         </Transitions>
     </Window.Transitions>
 
+    <!-- Контекст данных для дизайнера -->
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-
+    <!-- Ресурсы окна -->
     <Window.Resources>
         <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" />
     </Window.Resources>
@@ -37,7 +40,11 @@
         <StyleInclude Source="/Styles/MainStyles.axaml" />
     </Window.Styles>
 
+    <!-- Основной контейнер окна -->
     <Grid>
+        
+        
+        
         <!--Фон-->
         <Image Source="/Assets/BackGroung.png"
                Stretch="UniformToFill" />
@@ -45,6 +52,7 @@
         <!--Затемнение-->
         <Border Classes="Overlay" />
 
+        <!-- Основная сетка с отступами и анимацией прозрачности -->
         <Grid RowDefinitions="Auto *"
               Margin="15"
               RowSpacing="15"
@@ -88,6 +96,7 @@
 
                         <Grid ColumnDefinitions="Auto Auto Auto">
 
+                            <!-- Кнопка свернуть -->
                             <Button Grid.Column="0"
                                     Classes="ButtonTop"
                                     CornerRadius="5, 0,0, 5"
@@ -98,6 +107,7 @@
 
                             </Button>
 
+                            <!-- Кнопка развернуть/восстановить -->
                             <Button Grid.Column="1"
                                     Classes="ButtonTop"
                                     CornerRadius="0"
@@ -117,6 +127,7 @@
 
                             </Button>
 
+                            <!-- Кнопка закрыть -->
                             <Button Grid.Column="2"
                                     Classes="CloseButton"
                                     Command="{Binding Close}">
@@ -142,7 +153,7 @@
                   ColumnSpacing="10"
                   ColumnDefinitions="Auto *">
 
-                <!--Openable Border-->
+                <!--Openable Border - левая панель с информацией о метке -->
                 <Border Grid.Column="0"
                         Classes="Tile"
                         Padding="10"
@@ -166,7 +177,7 @@
 
                         </Grid.RowDefinitions>
 
-                        <!--Image Border-->
+                        <!--Image Border - контейнер для изображения метки -->
                         <Border Grid.Row="0"
                                 Classes="Tile">
 
@@ -181,10 +192,12 @@
                                     </Transitions>
                                 </Grid.Transitions>
 
+                                <!-- Изображение метки -->
                                 <Image Source="{Binding UserImage}"
                                        Stretch="Uniform"
                                        Margin="10" />
 
+                                <!-- Кнопка редактирования изображения (появляется в режиме редактирования) -->
                                 <Button IsVisible="{Binding IsEditing}"
                                         Opacity="{Binding EditPartsOpacity}"
                                         Classes="SideButton EditIconButton"
@@ -203,40 +216,55 @@
 
                         </Border>
 
+                        <!-- Панель настройки масштаба меток (появляется в режиме редактирования) -->
                         <Border Grid.Row="1"
                                 Classes="Tile"
                                 Padding="10"
                                 IsVisible="{Binding IsEditing}">
-                            
-                            <StackPanel VerticalAlignment="Stretch"
-                                        Height="{Binding SliderHeight}">
 
-                                <StackPanel.Transitions>
+                            <Grid RowDefinitions="Auto Auto *" 
+                                  VerticalAlignment="Stretch"
+                                  Height="{Binding SliderHeight}">
+
+                                <Grid.Transitions>
                                     <Transitions>
                                         <DoubleTransition Property="Height"
                                                           Duration="0:0:0.3" />
                                     </Transitions>
-                                </StackPanel.Transitions>
+                                </Grid.Transitions>
 
-                                
-                                <TextBlock Text="Размер меток" Foreground="White" FontWeight="Bold" />
+                                <!-- Заголовок слайдера -->
+                                <TextBlock Grid.Row="0" 
+                                           Text="Размер меток" 
+                                           Foreground="White" 
+                                           FontWeight="Bold" />
 
-                                <TextBlock Text="{Binding MarkerScale, StringFormat='Масштаб: {00:F2}'}"
+                                <!-- Текущее значение масштаба -->
+                                <TextBlock Grid.Row="1" 
+                                           Text="{Binding MarkerScale, StringFormat='Масштаб: {00:F2}'}"
                                            Foreground="White" />
 
-                                <Slider Minimum="0.05" Maximum="1.0"
+                                <!-- Слайдер изменения масштаба меток -->
+                                <Slider Grid.Row="2" 
+                                        Classes="Neon"
+                                        Minimum="0.05" 
+                                        Maximum="1.0"
                                         Value="{Binding MarkerScale, Mode=TwoWay}"
-                                        SmallChange="0.05" LargeChange="0.1"
-                                        TickFrequency="0.05" IsSnapToTickEnabled="True" />
+                                        SmallChange="0.01" 
+                                        LargeChange="0.1"
+                                        VerticalAlignment="Top"
+                                        TickFrequency="0.05" 
+                                        IsSnapToTickEnabled="True" />
 
-                            </StackPanel>
+                            </Grid>
 
                         </Border>
 
-                        <!--Description Border-->
+                        <!--Description Border - блок с описанием метки -->
                         <Border Grid.Row="2"
                                 Classes="Tile"
                                 Padding="10">
+                            
                             <Grid RowDefinitions="* Auto"
                                   Opacity="{Binding DescOpacity}">
 
@@ -247,6 +275,7 @@
                                     </Transitions>
                                 </Grid.Transitions>
 
+                                <!-- Отображение описания (режим просмотра) -->
                                 <Border Grid.Row="0"
                                         CornerRadius="10"
                                         ClipToBounds="True">
@@ -258,19 +287,22 @@
 
                                 </Border>
 
+                                <!-- Поле редактирования описания (режим редактирования) -->
                                 <TextBox Grid.Row="0"
                                          Classes="DescBox"
                                          Text="{Binding Description}"
                                          IsVisible="{Binding IsEditing}" />
 
+                                <!-- Панель кнопок управления меткой -->
                                 <Grid Grid.Row="1"
-                                      ColumnDefinitions="* * * "
+                                      ColumnDefinitions="* Auto * "
                                       HorizontalAlignment="Stretch">
 
+                                    <!-- Кнопка удаления метки -->
                                     <Button Grid.Column="0"
                                             Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding DeleteMarkerCommand}"
-                                            HorizontalAlignment="Center">
+                                            HorizontalAlignment="Left">
 
                                         <StackPanel Classes="StackButtonControl">
 
@@ -287,8 +319,10 @@
 
                                     </Button>
 
+                                    <!-- Контейнер для переключения между кнопками "Изменить" и "Применить" -->
                                     <Grid Grid.Column="1">
 
+                                        <!-- Кнопка перехода в режим редактирования -->
                                         <Button Classes="ControlButton SideButton GradientButton"
                                                 Command="{Binding EditMarkerCommand}"
                                                 Height="{Binding ButtonHeight1}"
@@ -317,6 +351,7 @@
 
                                         </Button>
 
+                                        <!-- Кнопка применения изменений -->
                                         <Button Classes="ControlButton SideButton GradientButton"
                                                 Command="{Binding ApplyChangesCommand}"
                                                 Height="{Binding ButtonHeight2}"
@@ -347,10 +382,11 @@
 
                                     </Grid>
 
+                                    <!-- Кнопка отмены изменений -->
                                     <Button Grid.Column="2"
                                             Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding CancelChangesCommand}"
-                                            HorizontalAlignment="Center">
+                                            HorizontalAlignment="Right">
 
                                         <StackPanel Classes="StackButtonControl">
 
@@ -377,12 +413,14 @@
 
                 </Border>
 
+                <!-- Контейнер карты -->
                 <Border Grid.Column="1"
                         CornerRadius="11"
                         ClipToBounds="True">
 
                     <Grid>
 
+                        <!-- Элемент управления картой Mapsui -->
                         <avalonia:MapControl x:Name="mapControl"
                                              ClipToBounds="True"
                                              Map="{Binding Map}"
@@ -390,6 +428,7 @@
 
                         </avalonia:MapControl>
 
+                        <!-- Нижняя правая панель с кнопками действий -->
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom"
                                     Orientation="Horizontal">
@@ -408,6 +447,7 @@
 
                                 <StackPanel Orientation="Vertical">
 
+                                    <!-- Заголовок панели действий -->
                                     <Border HorizontalAlignment="Stretch"
                                             Margin="5">
 
@@ -419,6 +459,7 @@
 
                                     </Border>
 
+                                    <!-- Кнопка добавления новой метки -->
                                     <Button Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding OpenListCommand}">
 
@@ -435,13 +476,11 @@
 
                                         </StackPanel>
 
-
                                     </Button>
 
-
+                                    <!-- Кнопка закрытия панели действий -->
                                     <Button Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding ClosePanel2Command}">
-
 
                                         <StackPanel Classes="StackButtonControl">
 
@@ -456,7 +495,6 @@
 
                                         </StackPanel>
 
-
                                     </Button>
 
                                 </StackPanel>
@@ -465,6 +503,7 @@
 
                         </StackPanel>
 
+                        <!-- Затемнение фона при открытом списке изображений -->
                         <Border Background="#0e071f"
                                 IsHitTestVisible="{Binding IsListOpen}"
                                 Opacity="{Binding OverlayOpacity}"
@@ -479,7 +518,7 @@
 
                         </Border>
 
-
+                        <!-- Модальное окно выбора/добавления изображений -->
                         <Border Classes="Tile"
                                 Background="#F809030E"
                                 ClipToBounds="True"
@@ -498,11 +537,14 @@
 
                             <Grid>
 
+                                <!-- Фон модального окна -->
                                 <Image Source="/Assets/BackGroung.png"
                                        Stretch="Fill" />
 
+                                <!-- Затемнение фона модального окна -->
                                 <Border Classes="Overlay" />
 
+                                <!-- Основное содержимое модального окна -->
                                 <Grid RowDefinitions="* Auto"
                                       IsVisible="{Binding IsListOpen}"
                                       Opacity="{Binding IconsOpacity}">
@@ -515,6 +557,7 @@
                                         </Transitions>
                                     </Grid.Transitions>
 
+                                    <!-- Область с сеткой изображений -->
                                     <Border Grid.Row="0"
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch"
@@ -529,9 +572,11 @@
                                             </LinearGradientBrush>
                                         </Border.OpacityMask>
 
+                                        <!-- Прокручиваемая сетка изображений -->
                                         <ScrollViewer HorizontalAlignment="Stretch"
                                                       VerticalAlignment="Stretch"
                                                       Margin="10">
+                                            
                                             <ItemsControl ItemsSource="{Binding Images}"
                                                           HorizontalAlignment="Stretch"
                                                           VerticalAlignment="Stretch">
@@ -543,14 +588,16 @@
                                                 </ItemsControl.ItemsPanel>
 
                                                 <ItemsControl.ItemTemplate>
+                                                    
                                                     <DataTemplate>
+                                                        
+                                                        <!-- Кнопка выбора изображения -->
                                                         <Button Classes="SideButton"
                                                                 Command="{Binding $parent[Window].DataContext.SelectIconCommand}"
                                                                 CommandParameter="{Binding}"
                                                                 Padding="0"
                                                                 Margin="5">
-
-                                                            <!-- Простой Border. Всю магию делает C# конвертер! -->
+                                                            
                                                             <Border BorderThickness="5"
                                                                     CornerRadius="10"
                                                                     Classes="Tile"
@@ -560,15 +607,22 @@
                                                                 <Image Source="{Binding Image}"
                                                                        Width="64"
                                                                        Height="64" />
+                                                                
                                                             </Border>
+                                                            
                                                         </Button>
+                                                        
                                                     </DataTemplate>
+                                                    
                                                 </ItemsControl.ItemTemplate>
+                                                
                                             </ItemsControl>
+                                            
                                         </ScrollViewer>
+                                        
                                     </Border>
 
-
+                                    <!-- Нижняя панель управления модального окна -->
                                     <Border Grid.Row="1"
                                             Classes="Tile"
                                             VerticalAlignment="Center"
@@ -578,6 +632,7 @@
                                         <Grid HorizontalAlignment="Stretch"
                                               ColumnDefinitions="Auto Auto *">
 
+                                            <!-- Кнопка добавления метки (в режиме создания) -->
                                             <Button Grid.Column="0" Classes="ControlButton GradientButton SideButton"
                                                     Command="{Binding AddMarkerFromPendingCommand}"
                                                     IsVisible="{Binding !IsEditing}"
@@ -598,6 +653,7 @@
 
                                             </Button>
 
+                                            <!-- Кнопка применения изменений изображения (в режиме редактирования) -->
                                             <Button Grid.Column="0" Classes="ControlButton GradientButton SideButton"
                                                     Command="{Binding ApplySelectedIconCommand}"
                                                     IsVisible="{Binding IsEditing}"
@@ -618,6 +674,7 @@
 
                                             </Button>
 
+                                            <!-- Кнопка закрытия модального окна -->
                                             <Button Grid.Column="1" Classes="ControlButton SideButton GradientButton"
                                                     Command="{Binding CloseListCommand}"
                                                     HorizontalAlignment="Left">
@@ -637,6 +694,7 @@
 
                                             </Button>
 
+                                            <!-- Кнопка добавления своего изображения -->
                                             <Button Grid.Column="2" Classes="ControlButton SideButton GradientButton"
                                                     Command="{Binding AddOrEditIconCommand}"
                                                     HorizontalAlignment="Right">
@@ -662,35 +720,15 @@
 
                                 </Grid>
 
-
                             </Grid>
 
                         </Border>
 
+                        <!-- Рамка вокруг карты -->
                         <Border CornerRadius="10"
                                 Margin="-2"
                                 BorderBrush="#FF5500AA"
-                                BorderThickness="6">
-
-                            <Border VerticalAlignment="Top"
-                                    HorizontalAlignment="Right"
-                                    Classes="Tile"
-                                    Margin="8">
-
-                                <StackPanel Orientation="Vertical">
-
-                                    <Button Command="{Binding OpenPanel1}">
-
-                                        <Image Source="/Assets/marker.png"
-                                               Classes="ButtonImage" />
-
-                                    </Button>
-
-                                </StackPanel>
-
-                            </Border>
-
-                        </Border>
+                                BorderThickness="6"/>
 
                     </Grid>
 

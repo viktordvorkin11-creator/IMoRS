@@ -12,6 +12,8 @@ public class MarkerDto
 
     public double Scale { get; set; } = 0.2;
 
+    public double Size { get; set; } = 0.2;
+
     public string? Description { get; set; }
 
     public string? IconPath { get; set; }
