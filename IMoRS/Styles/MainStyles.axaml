@@ -1,8 +1,5 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:mapsui="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.Avalonia"
-        xmlns:vm="using:IMoRS.ViewModels"
-        xmlns:avalonia="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.UI.Avalonia">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
         <Border Padding="20">
             <Grid Width="1600"
@@ -237,16 +234,16 @@
         <Style Selector="^:pointerover /template/ContentPresenter">
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
-                    <GradientStop Color="#FFA71DFF" Offset="0" />
-                    <GradientStop Color="#FF4F1899" Offset="1" />
+                    <GradientStop Color="#FF4F1899" Offset="0" />
+                    <GradientStop Color="#FFA71DFF" Offset="1" />
                 </LinearGradientBrush>
             </Setter>
         </Style>
         <Style Selector="^:pressed /template/ContentPresenter">
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="100%,30%" EndPoint="0%,0%">
-                    <GradientStop Color="#FFB71CFF" Offset="0" />
-                    <GradientStop Color="#FF6F1899" Offset="1" />
+                    <GradientStop Color="#FF6F1899" Offset="0" />
+                    <GradientStop Color="#FFB71CFF" Offset="1" />
                 </LinearGradientBrush>
             </Setter>
         </Style>

@@ -9,6 +9,7 @@ using IMoRS.DTOs;
 using Mapsui.Layers;
 using Mapsui.Projections;
 using Mapsui.Styles;
+using Microsoft.Data.Sqlite;
 
 namespace IMoRS.Services;
 
@@ -27,7 +28,7 @@ public class MarkerService
     /// <param name="iconPath">Путь к файлу иконки маркера</param>
     /// <param name="scale">Масштаб отображения маркера (1.0 - оригинальный размер)</param>
     /// <returns>DTO созданного маркера с присвоенным ID из базы данных</returns>
-    public MarkerDto Add(double x, double y, string iconPath, double scale)
+    public MarkerDto Add(double x, double y, string iconPath, double scale, string? desc)
     {
         using var db = new AppDbContext();
 
@@ -36,8 +37,8 @@ public class MarkerService
             X = x,
             Y = y,
             IconPath = iconPath,
-            ImagePath = iconPath,
-            Scale = scale
+            Scale = scale,
+            Description = desc
         };
 
         db.Markers.Add(marker);
@@ -49,7 +50,8 @@ public class MarkerService
             X = marker.X,
             Y = marker.Y,
             IconPath = marker.IconPath,
-            Scale = marker.Scale
+            Scale = marker.Scale,
+            Description = marker.Description
         };
     }
 
@@ -72,6 +74,13 @@ public class MarkerService
                 Scale = m.Scale
             })
             .ToList(); 
+    }
+
+    public void DeleteAll()
+    {
+        using var db = new AppDbContext();
+        db.RemoveRange(db.Markers);
+        db.SaveChanges();
     }
 
     /// <summary>
@@ -118,5 +127,14 @@ public class MarkerService
 
         db.Markers.Remove(marker);
         db.SaveChanges();
+    }
+    
+    /// <summary>
+    /// Принудительно закрывает все открытые SQLite-соединения.
+    /// Обязательно перед импортом БД из файла.
+    /// </summary>
+    public static void CloseAllConnections()
+    {
+        SqliteConnection.ClearAllPools();
     }
 }

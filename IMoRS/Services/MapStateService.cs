@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text.Json;
 using IMoRS.Models;
@@ -5,31 +6,49 @@ using IMoRS.Models;
 namespace IMoRS.Services;
 
 /// <summary>
-/// Сохраняет и загружает состояние карты в JSON-файл
+/// Сохраняет и загружает состояние карты в JSON-файл.
+/// Файл лежит в %AppData%\IMoRS\mapState.json.
 /// </summary>
 public static class MapStateService
 {
-    private const string FILE_NAME = "mapState.json";
+    public static readonly string StatePath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "IMoRS",
+        "mapState.json");
 
-    /// <summary>
-    /// Сохраняет состояние карты в файл
-    /// </summary>
     public static void Save(MapState state)
     {
+        if (!IsFinite(state.X) || !IsFinite(state.Y) || !IsFinite(state.Resolution))
+            return;
+
+        var dir = Path.GetDirectoryName(StatePath)!;
+        Directory.CreateDirectory(dir);
+
         var json = JsonSerializer.Serialize(state);
-        File.WriteAllText(FILE_NAME, json);
+        var tempPath = StatePath + ".tmp";
+        File.WriteAllText(tempPath, json);
+
+        if (File.Exists(StatePath))
+            File.Replace(tempPath, StatePath, null);
+        else
+            File.Move(tempPath, StatePath);
     }
 
-    /// <summary>
-    /// Загружает состояние карты из файла
-    /// </summary>
-    /// <returns>Состояние или null, если файл не найден</returns>
+    private static bool IsFinite(double v) => !double.IsNaN(v) && !double.IsInfinity(v);
+
     public static MapState? Load()
     {
-        if (!File.Exists(FILE_NAME))
+        if (!File.Exists(StatePath))
             return null;
 
-        var json = File.ReadAllText(FILE_NAME);
-        return JsonSerializer.Deserialize<MapState>(json);
+        try
+        {
+            var json = File.ReadAllText(StatePath);
+            return JsonSerializer.Deserialize<MapState>(json);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

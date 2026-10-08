@@ -3,20 +3,16 @@
         xmlns:vm="using:IMoRS.ViewModels"
         xmlns:avalonia="clr-namespace:Mapsui.UI.Avalonia;assembly=Mapsui.UI.Avalonia"
         xmlns:converters="using:IMoRS.Converters"
-        xmlns:fFmpegVideoPlayer="clr-namespace:Avalonia.FFmpegVideoPlayer;assembly=Avalonia.FFmpegVideoPlayer"
-
-
         x:Class="IMoRS.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/IMoRS.ico"
         Title="IMoRS"
-        Width="1600"
-        Height="900"
         CanResize="False"
+        WindowState="FullScreen"
+        Focusable="True"
         WindowDecorations="None"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="50">
-    
 
     <!-- Анимации перехода для окна -->
     <Window.Transitions>
@@ -36,63 +32,56 @@
         <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" />
     </Window.Resources>
 
-    <!--Подключил стили-->
+    <!-- Подключил стили -->
     <Window.Styles>
         <StyleInclude Source="/Styles/MainStyles.axaml" />
     </Window.Styles>
 
     <!-- Основной контейнер окна -->
     <Grid>
-        
-        <!--Фон-->
+
+        <!-- Фон -->
         <Image Source="/Assets/BackGroung.png"
                Stretch="UniformToFill" />
 
-        <!--Затемнение-->
+        <!-- Затемнение -->
         <Border Classes="Overlay" />
-        
+
         <!-- Основная сетка с отступами и анимацией прозрачности -->
         <Grid RowDefinitions="Auto *"
               Margin="15"
               RowSpacing="15"
               Opacity="{Binding AppOpacity}">
-
             <Grid.Transitions>
                 <Transitions>
-                    <DoubleTransition Property="Opacity"
-                                      Duration="0:0:1" />
+                    <DoubleTransition
+                        Property="Opacity"
+                        Duration="0:0:1" />
                 </Transitions>
             </Grid.Transitions>
 
-            <!--Верхняя панелька-->
+            <!-- Верхняя панелька -->
             <Border Classes="Tile"
-                    ClipToBounds="True"
-                    PointerPressed="DragWindow">
+                    ClipToBounds="True">
+                <Grid ColumnDefinitions="Auto *">
 
-                <Grid Grid.Row="0"
-                      ColumnDefinitions="Auto *">
-
-                    <!--Иконка приложения и название-->
+                    <!-- Иконка приложения и название -->
                     <StackPanel Grid.Column="0"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
-
                         <Image Source="/Assets/IMoRS.ico"
                                Width="50"
                                Height="50" />
-
                         <TextBlock Text="IMoRS"
                                    VerticalAlignment="Center"
                                    FontSize="25"
                                    Foreground="White"
                                    FontFamily="Cooper" />
-
                     </StackPanel>
 
-                    <!--Кнопки управления окном-->
+                    <!-- Кнопки управления окном -->
                     <Border Grid.Column="1"
                             Classes="TopTile">
-
                         <Grid ColumnDefinitions="Auto Auto Auto">
 
                             <!-- Кнопка свернуть -->
@@ -100,65 +89,36 @@
                                     Classes="ButtonTop"
                                     CornerRadius="5, 0,0, 5"
                                     Command="{Binding Minimize}">
-
                                 <Image Source="/Assets/minus.png"
                                        Classes="ButtonImage" />
-
-                            </Button>
-
-                            <!-- Кнопка развернуть/восстановить -->
-                            <Button Grid.Column="1"
-                                    Classes="ButtonTop"
-                                    CornerRadius="0"
-                                    Command="{Binding MaxRestore}">
-
-                                <Grid>
-
-                                    <Image Source="/Assets/square.png"
-                                           Classes="ButtonImage"
-                                           IsVisible="{Binding !IsMaximized}" />
-
-                                    <Image Source="/Assets/doublesquare.png"
-                                           Classes="ButtonImage"
-                                           IsVisible="{Binding IsMaximized}" />
-
-                                </Grid>
-
                             </Button>
 
                             <!-- Кнопка закрыть -->
                             <Button Grid.Column="2"
                                     Classes="CloseButton"
                                     Command="{Binding Close}">
-
                                 <Image Source="/Assets/cross.png"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        Width="20"
                                        Height="20" />
-
                             </Button>
-
                         </Grid>
-
                     </Border>
-
                 </Grid>
-
             </Border>
 
-            <!--Основная часть-->
+            <!-- Основная часть -->
             <Grid Grid.Row="1"
                   ColumnSpacing="10"
                   ColumnDefinitions="Auto *">
 
-                <!--Openable Border - левая панель с информацией о метке -->
+                <!-- Openable Border - левая панель с информацией о метке -->
                 <Border Grid.Column="0"
                         Classes="Tile"
                         Padding="10"
                         Width="{Binding PanelWidth1}"
                         HorizontalAlignment="Left">
-
                     <Border.Transitions>
                         <Transitions>
                             <DoubleTransition Property="Width"
@@ -167,23 +127,18 @@
                     </Border.Transitions>
 
                     <Grid RowSpacing="10">
-
                         <Grid.RowDefinitions>
-
                             <RowDefinition Height="380" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
-
                         </Grid.RowDefinitions>
 
-                        <!--Image Border - контейнер для изображения метки -->
+                        <!-- Image Border - контейнер для изображения метки -->
                         <Border Grid.Row="0"
                                 Classes="Tile">
-
                             <Grid HorizontalAlignment="Center"
                                   VerticalAlignment="Center"
                                   Opacity="{Binding DescOpacity}">
-
                                 <Grid.Transitions>
                                     <Transitions>
                                         <DoubleTransition Property="Opacity"
@@ -193,26 +148,19 @@
 
                                 <!-- Изображение метки -->
                                 <Image Source="{Binding UserImage}"
-                                       Stretch="Uniform"
-                                       Margin="10" />
+                                       Stretch="Uniform" Margin="10" />
 
                                 <!-- Кнопка редактирования изображения (появляется в режиме редактирования) -->
                                 <Button IsVisible="{Binding IsEditing}"
                                         Opacity="{Binding EditPartsOpacity}"
                                         Classes="SideButton EditIconButton"
                                         Command="{Binding OpenListCommand}">
-
                                     <Border Classes="Tile">
-
                                         <Image Source="/Assets/editIcon.png"
                                                Margin="25" />
-
                                     </Border>
-
                                 </Button>
-
                             </Grid>
-
                         </Border>
 
                         <!-- Панель настройки масштаба меток (появляется в режиме редактирования) -->
@@ -220,11 +168,9 @@
                                 Classes="Tile"
                                 Padding="10"
                                 IsVisible="{Binding IsEditing}">
-
-                            <Grid RowDefinitions="Auto Auto *" 
+                            <Grid RowDefinitions="Auto Auto *"
                                   VerticalAlignment="Stretch"
                                   Height="{Binding SliderHeight}">
-
                                 <Grid.Transitions>
                                     <Transitions>
                                         <DoubleTransition Property="Height"
@@ -233,38 +179,30 @@
                                 </Grid.Transitions>
 
                                 <!-- Заголовок слайдера -->
-                                <TextBlock Grid.Row="0" 
-                                           Text="Размер меток" 
-                                           Foreground="White" 
+                                <TextBlock Grid.Row="0"
+                                           Text="Размер меток"
+                                           Foreground="White"
                                            FontWeight="Bold" />
 
                                 <!-- Текущее значение масштаба -->
-                                <TextBlock Grid.Row="1" 
+                                <TextBlock Grid.Row="1"
                                            Text="{Binding MarkerScale, StringFormat='Масштаб: {00:F2}'}"
                                            Foreground="White" />
 
                                 <!-- Слайдер изменения масштаба меток -->
-                                <Slider Grid.Row="2" 
-                                        Classes="Neon"
-                                        Minimum="0.05" 
-                                        Maximum="1.0"
+                                <Slider Grid.Row="2" Classes="Neon"
+                                        Minimum="0.05" Maximum="1.0"
                                         Value="{Binding MarkerScale, Mode=TwoWay}"
                                         VerticalAlignment="Top"
-                                        TickFrequency="0.01" 
-                                        IsSnapToTickEnabled="True" />
-
+                                        TickFrequency="0.01" IsSnapToTickEnabled="True" />
                             </Grid>
-
                         </Border>
 
-                        <!--Description Border - блок с описанием метки -->
-                        <Border Grid.Row="2"
-                                Classes="Tile"
+                        <!-- Description Border - блок с описанием метки -->
+                        <Border Grid.Row="2" Classes="Tile"
                                 Padding="10">
-                            
                             <Grid RowDefinitions="* Auto"
                                   Opacity="{Binding DescOpacity}">
-
                                 <Grid.Transitions>
                                     <Transitions>
                                         <DoubleTransition Property="Opacity"
@@ -276,12 +214,10 @@
                                 <Border Grid.Row="0"
                                         CornerRadius="10"
                                         ClipToBounds="True">
-
                                     <TextBlock Text="{Binding Description}"
                                                Classes="DescBlock"
                                                HorizontalAlignment="Stretch"
                                                VerticalAlignment="Stretch" />
-
                                 </Border>
 
                                 <!-- Поле редактирования описания (режим редактирования) -->
@@ -292,29 +228,43 @@
 
                                 <!-- Панель кнопок управления меткой -->
                                 <Grid Grid.Row="1"
-                                      ColumnDefinitions="* Auto * "
+                                      ColumnDefinitions="* * * "
                                       HorizontalAlignment="Stretch">
+                                    <Grid Grid.Column="0">
 
-                                    <!-- Кнопка удаления метки -->
-                                    <Button Grid.Column="0"
+                                        <!-- Кнопка удаления метки -->
+                                        <Button
                                             Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding DeleteMarkerCommand}"
-                                            HorizontalAlignment="Left">
+                                            HorizontalAlignment="Stretch"
+                                            IsEnabled="{Binding !Settings.ConfirmDelete}"
+                                            IsVisible="{Binding !Settings.ConfirmDelete}">
+                                            <StackPanel Classes="StackButtonControl">
+                                                <Image Source="/Assets/minus.png"
+                                                       Height="20" Width="20" />
+                                                <TextBlock Text="Удалить"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
 
-                                        <StackPanel Classes="StackButtonControl">
-
-                                            <Image Source="/Assets/minus.png"
-                                                   Height="20"
-                                                   Width="20" />
-
-                                            <TextBlock Text="Удалить"
-                                                       Foreground="White"
-                                                       FontWeight="Bold"
-                                                       FontSize="12" />
-
-                                        </StackPanel>
-
-                                    </Button>
+                                        <Button
+                                            Classes="ControlButton SideButton GradientButton"
+                                            Command="{Binding ApplyDeleteMarkerCommand}"
+                                            HorizontalAlignment="Stretch"
+                                            IsEnabled="{Binding Settings.ConfirmDelete}"
+                                            IsVisible="{Binding Settings.ConfirmDelete}">
+                                            <StackPanel Classes="StackButtonControl">
+                                                <Image Source="/Assets/minus.png"
+                                                       Height="20" Width="20" />
+                                                <TextBlock Text="{Binding DeleteMarkerButtonText}"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
 
                                     <!-- Контейнер для переключения между кнопками "Изменить" и "Применить" -->
                                     <Grid Grid.Column="1">
@@ -324,28 +274,21 @@
                                                 Command="{Binding EditMarkerCommand}"
                                                 Height="{Binding ButtonHeight1}"
                                                 VerticalAlignment="Bottom"
-                                                HorizontalAlignment="Center">
-
+                                                HorizontalAlignment="Stretch">
                                             <Button.Transitions>
                                                 <Transitions>
                                                     <DoubleTransition Property="Height"
                                                                       Duration="0:0:0.25" />
                                                 </Transitions>
                                             </Button.Transitions>
-
                                             <StackPanel Classes="StackButtonControl">
-
                                                 <Image Source="/Assets/editIcon.png"
-                                                       Height="20"
-                                                       Width="20" />
-
+                                                       Height="20" Width="20" />
                                                 <TextBlock Text="Изменить"
                                                            Foreground="White"
                                                            FontWeight="Bold"
                                                            FontSize="12" />
-
                                             </StackPanel>
-
                                         </Button>
 
                                         <!-- Кнопка применения изменений -->
@@ -353,88 +296,101 @@
                                                 Command="{Binding ApplyChangesCommand}"
                                                 Height="{Binding ButtonHeight2}"
                                                 VerticalAlignment="Top"
-                                                HorizontalAlignment="Center">
-
+                                                HorizontalAlignment="Stretch">
                                             <Button.Transitions>
                                                 <Transitions>
                                                     <DoubleTransition Property="Height"
                                                                       Duration="0:0:0.25" />
                                                 </Transitions>
                                             </Button.Transitions>
-
                                             <StackPanel Classes="StackButtonControl">
-
                                                 <Image Source="/Assets/ConfirmIcon.png"
                                                        Height="20"
                                                        Width="20" />
-
                                                 <TextBlock Text="Применить"
                                                            Foreground="White"
                                                            FontWeight="Bold"
                                                            FontSize="12" />
-
                                             </StackPanel>
-
                                         </Button>
-
                                     </Grid>
 
                                     <!-- Кнопка отмены изменений -->
                                     <Button Grid.Column="2"
                                             Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding CancelChangesCommand}"
-                                            HorizontalAlignment="Right">
-
+                                            HorizontalAlignment="Stretch">
                                         <StackPanel Classes="StackButtonControl">
-
                                             <Image Source="/Assets/cross.png"
                                                    Height="20"
                                                    Width="20" />
-
                                             <TextBlock Text="Отмена"
                                                        Foreground="White"
                                                        FontWeight="Bold"
                                                        FontSize="12" />
-
                                         </StackPanel>
-
                                     </Button>
-
                                 </Grid>
-
                             </Grid>
-
                         </Border>
-
                     </Grid>
-
                 </Border>
 
                 <!-- Контейнер карты -->
                 <Border Grid.Column="1"
                         CornerRadius="11"
                         ClipToBounds="True">
-
                     <Grid>
 
                         <!-- Элемент управления картой Mapsui -->
                         <avalonia:MapControl x:Name="mapControl"
                                              ClipToBounds="True"
                                              Map="{Binding Map}"
-                                             IsVisible="{Binding IsMapVisible}">
+                                             IsVisible="{Binding IsMapVisible}" />
 
-                        </avalonia:MapControl>
+                        <!-- Управление -->
+                        <StackPanel Orientation="Vertical"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="8">
+
+                            <Button Command="{Binding OpenSettingsCommand}"
+                                    Classes="SideButton"
+                                    Width="50"
+                                    Height="50"
+                                    Padding="0">
+                                <Border Classes="Tile"
+                                        Padding="1"
+                                        Background="#F809030E">
+                                    <Image Source="/Assets/Settings.png"
+                                           Stretch="Uniform"
+                                           Classes="ButtonImage" />
+                                </Border>
+                            </Button>
+
+                            <Button Command="{Binding ChangeModeCommand}"
+                                    Classes="SideButton"
+                                    Width="50"
+                                    Height="50"
+                                    Padding="0">
+                                <Border Classes="Tile"
+                                        Background="#F809030E"
+                                        Padding="1">
+                                    <Image Source="/Assets/plus.png"
+                                           Stretch="Uniform"
+                                           Classes="ButtonImage" />
+                                </Border>
+                            </Button>
+                        </StackPanel>
 
                         <!-- Нижняя правая панель с кнопками действий -->
                         <StackPanel HorizontalAlignment="Right"
                                     VerticalAlignment="Bottom"
                                     Orientation="Horizontal">
-
                             <Border Classes="Tile"
                                     Background="#F809030E"
                                     Width="{Binding PanelWidth2}"
                                     Margin="8">
-
                                 <Border.Transitions>
                                     <Transitions>
                                         <DoubleTransition Property="Width"
@@ -447,57 +403,43 @@
                                     <!-- Заголовок панели действий -->
                                     <Border HorizontalAlignment="Stretch"
                                             Margin="5">
-
                                         <TextBlock Text="Действия"
                                                    FontSize="18"
                                                    Foreground="White"
                                                    FontWeight="Bold"
                                                    HorizontalAlignment="Center" />
-
                                     </Border>
 
                                     <!-- Кнопка добавления новой метки -->
                                     <Button Classes="ControlButton SideButton GradientButton"
                                             Command="{Binding OpenListCommand}">
-
                                         <StackPanel Classes="StackButtonControl">
-
                                             <Image Source="/Assets/plus.png"
                                                    Height="20"
                                                    Width="20" />
-
                                             <TextBlock Text="Добавить"
                                                        Foreground="White"
                                                        FontWeight="Bold"
                                                        FontSize="18" />
-
                                         </StackPanel>
-
                                     </Button>
 
                                     <!-- Кнопка закрытия панели действий -->
                                     <Button Classes="ControlButton SideButton GradientButton"
-                                            Command="{Binding ClosePanel2Command}">
-
+                                            Command="{Binding ClosePanel2Command}"
+                                            HorizontalAlignment="Stretch">
                                         <StackPanel Classes="StackButtonControl">
-
                                             <Image Source="/Assets/cross.png"
                                                    Height="20"
                                                    Width="20" />
-
                                             <TextBlock Text="Отмена"
                                                        Foreground="White"
                                                        FontWeight="Bold"
                                                        FontSize="18" />
-
                                         </StackPanel>
-
                                     </Button>
-
                                 </StackPanel>
-
                             </Border>
-
                         </StackPanel>
 
                         <!-- Затемнение фона при открытом списке изображений -->
@@ -505,14 +447,12 @@
                                 IsHitTestVisible="{Binding IsListOpen}"
                                 Opacity="{Binding OverlayOpacity}"
                                 PointerPressed="Overlay_PointerPressed">
-
                             <Border.Transitions>
                                 <Transitions>
                                     <DoubleTransition Property="Opacity"
                                                       Duration="0:0:0.5" />
                                 </Transitions>
                             </Border.Transitions>
-
                         </Border>
 
                         <!-- Модальное окно выбора/добавления изображений -->
@@ -522,7 +462,6 @@
                                 Width="{Binding BorderListWidth}"
                                 Height="{Binding BorderListHeight}"
                                 IsEnabled="{Binding IsListOpen}">
-
                             <Border.Transitions>
                                 <Transitions>
                                     <DoubleTransition Property="Height"
@@ -545,12 +484,10 @@
                                 <Grid RowDefinitions="* Auto"
                                       IsVisible="{Binding IsListOpen}"
                                       Opacity="{Binding IconsOpacity}">
-
                                     <Grid.Transitions>
                                         <Transitions>
                                             <DoubleTransition Property="Opacity"
-                                                              Duration="0:0:0.5">
-                                            </DoubleTransition>
+                                                              Duration="0:0:0.5" />
                                         </Transitions>
                                     </Grid.Transitions>
 
@@ -559,13 +496,17 @@
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch"
                                             Margin="10">
-
                                         <Border.OpacityMask>
-                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                                <GradientStop Color="Transparent" Offset="0.0" />
-                                                <GradientStop Color="White" Offset="0.15" />
-                                                <GradientStop Color="White" Offset="0.85" />
-                                                <GradientStop Color="Transparent" Offset="1.0" />
+                                            <LinearGradientBrush StartPoint="0%,0%"
+                                                                 EndPoint="0%,100%">
+                                                <GradientStop Color="Transparent"
+                                                              Offset="0.0" />
+                                                <GradientStop Color="White"
+                                                              Offset="0.15" />
+                                                <GradientStop Color="White"
+                                                              Offset="0.85" />
+                                                <GradientStop Color="Transparent"
+                                                              Offset="1.0" />
                                             </LinearGradientBrush>
                                         </Border.OpacityMask>
 
@@ -573,11 +514,9 @@
                                         <ScrollViewer HorizontalAlignment="Stretch"
                                                       VerticalAlignment="Stretch"
                                                       Margin="10">
-                                            
                                             <ItemsControl ItemsSource="{Binding Images}"
                                                           HorizontalAlignment="Stretch"
                                                           VerticalAlignment="Stretch">
-
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
                                                         <WrapPanel />
@@ -585,38 +524,27 @@
                                                 </ItemsControl.ItemsPanel>
 
                                                 <ItemsControl.ItemTemplate>
-                                                    
                                                     <DataTemplate>
-                                                        
+
                                                         <!-- Кнопка выбора изображения -->
                                                         <Button Classes="SideButton"
                                                                 Command="{Binding $parent[Window].DataContext.SelectIconCommand}"
                                                                 CommandParameter="{Binding}"
                                                                 Padding="0"
                                                                 Margin="5">
-                                                            
                                                             <Border BorderThickness="5"
-                                                                    CornerRadius="10"
                                                                     Classes="Tile"
                                                                     Padding="5"
                                                                     BorderBrush="{Binding IsSelected, Converter={StaticResource BoolToBrushConverter}}">
-
                                                                 <Image Source="{Binding Image}"
-                                                                       Width="64"
-                                                                       Height="64" />
-                                                                
+                                                                       Width="140"
+                                                                       Height="140" />
                                                             </Border>
-                                                            
                                                         </Button>
-                                                        
                                                     </DataTemplate>
-                                                    
                                                 </ItemsControl.ItemTemplate>
-                                                
                                             </ItemsControl>
-                                            
                                         </ScrollViewer>
-                                        
                                     </Border>
 
                                     <!-- Нижняя панель управления модального окна -->
@@ -625,116 +553,303 @@
                                             VerticalAlignment="Center"
                                             HorizontalAlignment="Stretch"
                                             Margin="10">
-
                                         <Grid HorizontalAlignment="Stretch"
                                               ColumnDefinitions="Auto Auto *">
 
                                             <!-- Кнопка добавления метки (в режиме создания) -->
-                                            <Button Grid.Column="0" Classes="ControlButton GradientButton SideButton"
+                                            <Button Grid.Column="0"
+                                                    Classes="ControlButton GradientButton SideButton"
                                                     Command="{Binding AddMarkerFromPendingCommand}"
                                                     IsVisible="{Binding !IsEditing}"
                                                     HorizontalAlignment="Left">
-
                                                 <StackPanel Classes="StackButtonControl">
-
                                                     <Image Source="/Assets/plus.png"
                                                            Height="20"
                                                            Width="20" />
-
                                                     <TextBlock Text="Добавить"
                                                                Foreground="White"
                                                                FontWeight="Bold"
                                                                FontSize="18" />
-
                                                 </StackPanel>
-
                                             </Button>
 
                                             <!-- Кнопка применения изменений изображения (в режиме редактирования) -->
-                                            <Button Grid.Column="0" Classes="ControlButton GradientButton SideButton"
+                                            <Button Grid.Column="0"
+                                                    Classes="ControlButton GradientButton SideButton"
                                                     Command="{Binding ApplySelectedIconCommand}"
                                                     IsVisible="{Binding IsEditing}"
                                                     HorizontalAlignment="Left">
-
                                                 <StackPanel Classes="StackButtonControl">
-
                                                     <Image Source="/Assets/ConfirmIcon.png"
                                                            Height="20"
                                                            Width="20" />
-
                                                     <TextBlock Text="Применить"
                                                                Foreground="White"
                                                                FontWeight="Bold"
                                                                FontSize="18" />
-
                                                 </StackPanel>
-
                                             </Button>
 
                                             <!-- Кнопка закрытия модального окна -->
-                                            <Button Grid.Column="1" Classes="ControlButton SideButton GradientButton"
+                                            <Button Grid.Column="1"
+                                                    Classes="ControlButton SideButton GradientButton"
                                                     Command="{Binding CloseListCommand}"
                                                     HorizontalAlignment="Left">
-
                                                 <StackPanel Classes="StackButtonControl">
-
                                                     <Image Source="/Assets/cross.png"
                                                            Height="20"
                                                            Width="20" />
-
                                                     <TextBlock Text="Отмена"
                                                                Foreground="White"
                                                                FontWeight="Bold"
                                                                FontSize="18" />
-
                                                 </StackPanel>
-
                                             </Button>
 
                                             <!-- Кнопка добавления своего изображения -->
-                                            <Button Grid.Column="2" Classes="ControlButton SideButton GradientButton"
+                                            <Button Grid.Column="2"
+                                                    Classes="ControlButton SideButton GradientButton"
                                                     Command="{Binding AddOrEditIconCommand}"
                                                     HorizontalAlignment="Right">
-
                                                 <StackPanel Classes="StackButtonControl">
-
                                                     <Image Source="/Assets/OpenFolderIcon.png"
                                                            Height="20"
                                                            Width="20" />
-
                                                     <TextBlock Text="Добавить свой"
                                                                Foreground="White"
                                                                FontWeight="Bold"
                                                                FontSize="18" />
-
                                                 </StackPanel>
-
                                             </Button>
-
                                         </Grid>
-
                                     </Border>
-
                                 </Grid>
-
                             </Grid>
+                        </Border>
 
+                        <Border Classes="Tile"
+                                Background="#F809030E"
+                                ClipToBounds="True"
+                                Width="{Binding BorderSettingsWidth}"
+                                Height="{Binding BorderSettingsHeight}"
+                                IsEnabled="{Binding IsListOpen}">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Height"
+                                                      Duration="0:0:0.2" />
+                                    <DoubleTransition Property="Width"
+                                                      Duration="0:0:0.2" />
+                                </Transitions>
+                            </Border.Transitions>
+                            <Grid RowDefinitions="Auto * Auto"
+                                  Opacity="{Binding SettingsOpacity}">
+                                <Grid.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity"
+                                                          Duration="0:0:0.5" />
+                                    </Transitions>
+                                </Grid.Transitions>
+                                <Border Grid.Row="0"
+                                        Classes="Tile"
+                                        Padding="15"
+                                        Margin="15">
+                                    <TextBlock Text="Настройки"
+                                               FontSize="45"
+                                               Foreground="White"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center" />
+                                </Border>
+
+                                <ScrollViewer Grid.Row="1"
+                                              Margin="15">
+                                    <StackPanel Spacing="15">
+
+                                        <Border Classes="Tile"
+                                                Padding="15">
+                                            <StackPanel Spacing="10">
+                                                <TextBlock Text="Метки"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="22" />
+
+                                                <Grid ColumnDefinitions="Auto * Auto">
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="Размер новых меток"
+                                                               Foreground="White"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,15,0"
+                                                               FontSize="22" />
+                                                    <Slider Grid.Column="1"
+                                                            x:Name="DefaultSizeSlider"
+                                                            Classes="Neon"
+                                                            Minimum="0.05"
+                                                            Maximum="1.0"
+                                                            TickFrequency="0.01"
+                                                            Value="{Binding Settings.DefaultMarkerScale, Mode=TwoWay}"
+                                                            IsSnapToTickEnabled="True" />
+
+                                                    <NumericUpDown Grid.Column="2"
+                                                                   Text="{Binding #DefaultSizeSlider.Value, StringFormat={}{0:F2}}"
+                                                                   Increment="0.01"
+                                                                   Minimum="0.05"
+                                                                   Maximum="1.00"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="22"
+                                                                   Margin="15, 5, 0, 5" />
+                                                </Grid>
+
+                                                <CheckBox Content="Спрашивать подтверждение при удалении"
+                                                          IsChecked="{Binding Settings.ConfirmDelete, Mode=TwoWay}"
+                                                          Foreground="White" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Classes="Tile" Padding="15">
+                                            <StackPanel Spacing="10">
+                                                <TextBlock Text="Иконки"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="22" />
+                                                <Grid ColumnDefinitions="2* 3*">
+                                                    <Button Classes="ControlButton GradientButton SideButton"
+                                                            Command="{Binding OpenFolderCommand}"
+                                                            HorizontalAlignment="Stretch">
+                                                        <StackPanel Classes="StackButtonControl">
+                                                            <TextBlock
+                                                                Text="Открыть папку с пользовательскими иконками"
+                                                                Foreground="White"
+                                                                FontWeight="Bold"
+                                                                FontSize="22" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Classes="Tile" Padding="15">
+                                            <StackPanel Spacing="10">
+                                                <TextBlock Text="Карта"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="22" />
+
+                                                <CheckBox Content="Восстанавливать позицию карты при запуске"
+                                                          IsChecked="{Binding Settings.RestoreMapState, Mode=TwoWay}"
+                                                          Foreground="White" />
+                                                <Grid ColumnDefinitions="2* 3*">
+                                                    <Button Classes="ControlButton GradientButton SideButton"
+                                                            Command="{Binding SaveCurrentMapAsDefaultCommand}"
+                                                            HorizontalAlignment="Stretch">
+                                                        <StackPanel Classes="StackButtonControl">
+                                                            <TextBlock Text="Сохранить текущую позицию как стартовую"
+                                                                       Foreground="White"
+                                                                       FontWeight="Bold"
+                                                                       FontSize="22" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Classes="Tile" Padding="15">
+                                            <StackPanel Spacing="10">
+                                                <TextBlock Text="Данные"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="22" />
+
+                                                <Grid ColumnDefinitions="* * 2* *">
+                                                    <Button Grid.Column="0" Classes="ControlButton GradientButton SideButton"
+                                                            HorizontalAlignment="Stretch"
+                                                            Margin="0, 0, 10, 0"
+                                                            Command="{Binding ExportDatabaseCommand}">
+                                                        <StackPanel Classes="StackButtonControl">
+                                                            <TextBlock Text="Экспорт"
+                                                                       Foreground="White"
+                                                                       FontWeight="Bold"
+                                                                       FontSize="22" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    
+                                                    <Button Grid.Column="1" Classes="ControlButton GradientButton SideButton"
+                                                            HorizontalAlignment="Stretch"
+                                                            Margin="10, 0, 0, 0"
+                                                            Command="{Binding ImportDatabaseCommand}">
+                                                        <StackPanel Classes="StackButtonControl">
+                                                            <TextBlock Text="Импорт"
+                                                                       Foreground="White"
+                                                                       FontWeight="Bold"
+                                                                       FontSize="22" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    
+                                                    <Button Grid.Column="3" Classes="ControlButton GradientButton SideButton"
+                                                            HorizontalAlignment="Stretch"
+                                                            Margin="0, 0, 10, 0"
+                                                            Command="{Binding ApplyClearDatabaseCommand}">
+                                                        <StackPanel Classes="StackButtonControl">
+                                                            <TextBlock Text="{Binding ClearDbButtonText}"
+                                                                       Foreground="White"
+                                                                       FontWeight="Bold"
+                                                                       FontSize="22" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+
+                                    </StackPanel>
+                                </ScrollViewer>
+                                <Border Grid.Row="2" Classes="Tile" Padding="15" Margin="10">
+                                    <Grid ColumnDefinitions="5* * * *">
+                                        <Button Grid.Column="1"
+                                                Classes="ControlButton SideButton GradientButton"
+                                                Command="{Binding ApplySettingsAndCloseCommand}"
+                                                HorizontalAlignment="Stretch">
+                                            <TextBlock Text="ОК"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       FontSize="22"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
+
+
+                                        <Button Grid.Column="2"
+                                                Classes="ControlButton SideButton GradientButton"
+                                                Command="{Binding ApplySettingsCommand}"
+                                                HorizontalAlignment="Stretch">
+                                            <TextBlock Text="Применить"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       FontSize="22"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
+
+
+                                        <Button Grid.Column="3"
+                                                Classes="ControlButton SideButton GradientButton"
+                                                Command="{Binding ResetSettingsCommand}"
+                                                HorizontalAlignment="Stretch">
+                                            <TextBlock Text="Сбросить"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       FontSize="22"
+                                                       HorizontalAlignment="Center" />
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </Grid>
                         </Border>
 
                         <!-- Рамка вокруг карты -->
                         <Border CornerRadius="10"
                                 Margin="-2"
                                 BorderBrush="#FF5500AA"
-                                BorderThickness="6"/>
-
+                                BorderThickness="6" />
                     </Grid>
-
                 </Border>
-
             </Grid>
-
         </Grid>
-
     </Grid>
-
 </Window>

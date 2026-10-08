@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Controls;
@@ -17,6 +19,9 @@ using Mapsui.Manipulations;
 using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.UI.Avalonia;
+using Brush = Mapsui.Styles.Brush;
+using Color = Mapsui.Styles.Color;
+using Pen = Mapsui.Styles.Pen;
 
 namespace IMoRS.Views;
 
@@ -32,11 +37,39 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        
+        DataContext = new MainWindowViewModel();
+
+        if (DataContext is MainWindowViewModel vm)
+            vm.PropertyChanged += ViewModel_PropertyChanged;
 
         mapControl.Info += MapControlInfo;
         mapControl.PointerPressed += OnMapPointerPressed;
         mapControl.PointerMoved += OnMapPointerMoved;
         mapControl.PointerReleased += OnMapPointerReleased;
+    }
+    
+    private void ViewModel_PropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MainWindowViewModel.IsAddingMarker))
+            return;
+
+        if (sender is not MainWindowViewModel vm)
+            return;
+
+        if (!vm.IsAddingMarker)
+        {
+            var layer = mapControl.Map.Layers
+                .FirstOrDefault(x => x.Name == "PendingMarker");
+
+            if (layer != null)
+            {
+                mapControl.Map.Layers.Remove(layer);
+                mapControl.RefreshData();
+            }
+        }
     }
 
     // Вызывается при нажатии на карте, переключает режимы нажатия и зажатия
@@ -49,18 +82,19 @@ public partial class MainWindow : Window
 
     // При перемещении карты закрывает панели, отменяет режим редактирования
     private void OnMapPointerMoved(object? sender, PointerEventArgs e)
-    { 
+    {
         if (_isPressed && DataContext is MainWindowViewModel vm)
         {
             var currentPosition = e.GetPosition(mapControl);
             var delta = _pointerDownPosition - currentPosition;
-        
+
             if (Math.Abs(delta.X) > 5 || Math.Abs(delta.Y) > 5)
             {
                 if (vm.IsPanel1Open)
                 {
                     vm.CancelChangesCommand.Execute(null);
                 }
+
                 _isDragging = true;
                 vm.ClosePanel2Command.Execute(null);
                 vm.ClosePanel1Command.Execute(null);
@@ -84,10 +118,11 @@ public partial class MainWindow : Window
             {
                 vm.CancelChangesCommand.Execute(null);
             }
+
             vm.ClosePanel1Command.Execute(null);
             vm.OpenPanel2Command.Execute(null);
         }
-    
+
         _isPressed = false;
         _isDragging = false;
     }
@@ -110,12 +145,6 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
-    // Двигает окно
-    private void DragWindow(object? sender, PointerPressedEventArgs e)
-    {
-        BeginMoveDrag(e);
-    }
-
     // Проверяет клик по карте, если он был совершён по метке - открывает панель информации о метке, если нет - открывает панель создания метки
     private void MapControlInfo(object? sender, MapInfoEventArgs e)
     {
@@ -136,11 +165,40 @@ public partial class MainWindow : Window
                 return;
             }
         }
-
-        if (e.WorldPosition != null)
+        
+        if (vm.IsAddingMarker && e.WorldPosition != null)
         {
-            var (lon, lat) = SphericalMercator.ToLonLat(e.WorldPosition.X, e.WorldPosition.Y);
-            vm.SetPendingMarker(lon, lat); 
+            var (lon, lat) = SphericalMercator.ToLonLat(
+                e.WorldPosition.X,
+                e.WorldPosition.Y);
+
+            vm.SetPendingMarker(lon, lat);
+
+            var markerFeature = new PointFeature(
+                e.WorldPosition.X,
+                e.WorldPosition.Y);
+
+            markerFeature.Styles.Add(new SymbolStyle
+            {
+                SymbolScale = 1,
+                Outline = new Pen(Color.White, 2),
+                Fill = new Brush(Color.Red)
+            });
+
+            var newLayer = new MemoryLayer
+            {
+                Name = "PendingMarker",
+                Features = new[] { markerFeature }
+            };
+
+            var oldLayer = mapControl.Map.Layers
+                .FirstOrDefault(x => x.Name == "PendingMarker");
+
+            mapControl.Map.Layers.Modify(
+                oldLayer is null ? [] : [oldLayer],
+                [newLayer]);
+
+            mapControl.RefreshData();
         }
     }
 
@@ -150,6 +208,7 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel vm)
         {
             vm.CloseListCommand.Execute(null);
+            vm.CloseSettingsCommand.Execute(null);
         }
     }
 }
